@@ -1,0 +1,17 @@
+{
+  "description": "techwave-toolkit compliance reminder — warns on potential credential or PII patterns in written files",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/compliance-scan.sh\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}
