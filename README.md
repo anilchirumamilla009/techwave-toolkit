@@ -68,17 +68,17 @@ techwave-toolkit wraps the development phases of the SDLC into a Claude Code plu
 
 ```bash
 # Step 1 — register the GitHub repo as a marketplace
-# Claude Code derives the marketplace name from the plugin (registers as "techwave")
+# Marketplace name is set explicitly in .claude-plugin/marketplace.json ("techwave-development-toolkit")
 claude plugin marketplace add anilchirumamilla009/techwave-toolkit
 
 # Step 2 — install the plugin
-claude plugin install techwave-toolkit@techwave
+claude plugin install techwave-toolkit@techwave-development-toolkit
 ```
 
 To update to the latest version:
 
 ```bash
-claude plugin marketplace update techwave
+claude plugin marketplace update techwave-development-toolkit
 claude plugin update techwave-toolkit
 ```
 
