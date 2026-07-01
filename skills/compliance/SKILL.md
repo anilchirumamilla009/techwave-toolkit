@@ -14,6 +14,16 @@ This skill reviews a codebase or design against domain-specific regulatory requi
 
 Invoke when the user wants to validate that their code or architecture meets regulatory or compliance requirements. Works on existing codebases (read and analyze) or proposed designs (analyze based on description).
 
+## Step 0 — Knowledge Graph Check
+
+Load `../shared/knowledge-graph.md` for the full protocol. Summary:
+
+1. If `graphify-out/graph.json` exists → run `bash scripts/query-kg.sh "<domain keyword + service name>"`
+2. If missing → run `bash scripts/setup-kg.sh` first, then query
+3. Inject results as KG Context (existing controls applied, sensitive data flows, prior audit findings) before Step 1
+
+---
+
 ## Arguments Routing
 
 The user passes a domain as `$ARGUMENTS`. Route to the correct reference file:

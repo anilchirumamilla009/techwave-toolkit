@@ -1,1 +1,8 @@
 idea
+
+# graphify knowledge graph output — rebuilt on demand via scripts/setup-kg.sh
+# Contents: graph.json, GRAPH_REPORT.md, graph.html, cache/
+graphify-out/
+
+# Environment secrets
+.env
