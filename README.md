@@ -64,46 +64,22 @@ techwave-toolkit wraps the development phases of the SDLC into a Claude Code plu
 
 ## Installation
 
-### Option 1 — Load for the current session only
-
-No installation step. Pass the plugin directory when starting Claude Code:
+### Option 1 — Install from GitHub via marketplace
 
 ```bash
-claude --plugin-dir /path/to/techwave-toolkit
+# Step 1 — register the GitHub repo as a marketplace
+# Marketplace name is set explicitly in .claude-plugin/marketplace.json ("techwave-development-toolkit")
+claude plugin marketplace add anilchirumamilla009/techwave-toolkit
+
+# Step 2 — install the plugin
+claude plugin install techwave-toolkit@techwave-development-toolkit
 ```
 
-The plugin is active for that session only. Skills are not available in future sessions.
-
-### Option 2 — Permanent install via local directory
+To update to the latest version:
 
 ```bash
-claude plugin install --plugin-dir /path/to/techwave-toolkit
-```
-
-### Option 3 — Permanent install via symlink
-
-Symlink the plugin into the Claude Code skills directory so it loads automatically every session:
-
-```bash
-ln -s /path/to/techwave-toolkit ~/.claude/skills/techwave-toolkit
-```
-
-Verify it loaded:
-
-```bash
-claude plugin list
-```
-
-### Option 4 — Install from the remote marketplace
-
-Once published to the Claude Code marketplace:
-
-```bash
-# Install from the default marketplace
-claude plugin install techwave-toolkit
-
-# Install from a named marketplace (e.g., the techwave org marketplace)
-claude plugin install techwave-toolkit@techwave
+claude plugin marketplace update techwave-development-toolkit
+claude plugin update techwave-toolkit
 ```
 
 ---
@@ -172,7 +148,6 @@ claude plugin disable techwave-toolkit
 claude plugin enable techwave-toolkit
 
 # Completely remove the plugin and its hooks
-claude plugin uninstall techwave-toolkit
 
 # Validate plugin.json and all SKILL.md frontmatter (run from the plugin root)
 claude plugin validate .
