@@ -1,5 +1,5 @@
 {
-  "name": "techwave",
+  "name": "techwave-development-toolkit",
   "owner": {
     "name": "Venkata Anil Kumar Chirumamilla",
     "email": "anil.chirumamilla@techwave.com"
@@ -9,7 +9,7 @@
     {
       "name": "techwave-toolkit",
       "source": ".",
-      "description": "SDLC workflow skills: orchestrate, requirements, design, scaffold, testing, compliance, CI/CD, deployment — tech-stack agnostic",
+      "description": "SDLC workflow skills: orchestrate, requirements, design, scaffold, testing, compliance — tech-stack agnostic",
       "version": "0.2.0",
       "category": "development"
     }
