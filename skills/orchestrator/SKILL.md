@@ -28,6 +28,16 @@ You do not generate artifacts yourself. You coordinate: parse the input, detect 
 
 ---
 
+## Step 0 — Knowledge Graph Check
+
+Load `../shared/knowledge-graph.md` for the full protocol. Summary:
+
+1. If `graphify-out/graph.json` exists → run `bash scripts/query-kg.sh "<feature title + type>"`
+2. If missing → run `bash scripts/setup-kg.sh` first, then query
+3. Inject results as KG Context (existing phases completed, related modules) before Step 1
+
+---
+
 ## Step 1 — Parse the Input
 
 **Detect input type:**
@@ -115,10 +125,8 @@ Before proposing a sequence, scan the project to avoid re-doing work:
 Check for:
   src/ or app/ or lib/  → some code already exists
   *Test*.java / *.test.ts / test_*.py  → tests exist
-  .github/workflows/ / Jenkinsfile / .gitlab-ci.yml  → CI exists
-  docker-compose.yml / helm/ / terraform/  → deploy config exists
   pom.xml / package.json / go.mod  → stack is known
-  docs/architecture* / ADR-*.md  → design docs exist
+  docs/HLD.md / docs/LLD.md / ADR-*.md  → design docs exist
 ```
 
 ---
@@ -130,20 +138,17 @@ Based on what exists, propose only the phases that are missing:
 **Full sequence (nothing exists):**
 ```
 Phase 1: /requirements  — user stories + acceptance criteria
-Phase 2: /design        — architecture diagrams + ADR
-Phase 3: /scaffold      — project boilerplate
+Phase 2: /design        — HLD, LLD, ADR saved to docs/
+Phase 3: /coding        — code, tests, validation (3-agent flow)
 Phase 4: /test-plan     — test strategy + stubs
 Phase 5: /compliance    — domain compliance check
-Phase 6: /cicd          — pipeline setup
-Phase 7: /deploy        — deployment config
 ```
 
 **Partial sequences (examples):**
 ```
-Code exists, no tests:     /test-plan → /compliance → /cicd → /deploy
-Bug ticket:                /requirements (bug story) → /test-plan
-New feature, has scaffold: /requirements → /design → /test-plan → /compliance
-Has CI, needs deploy:      /deploy
+New feature:           /requirements → /design → /coding → /test-plan → /compliance
+Code exists, no tests: /test-plan → /compliance
+Bug ticket:            /requirements (bug story) → /coding → /test-plan
 ```
 
 Show the user: "Proposed sequence: [list phases]. Type 'go' to start, or adjust."
@@ -158,7 +163,7 @@ For each phase in the approved sequence:
 2. Invoke the skill with relevant context from the parsed requirement:
    - Pass the requirement title, type, domain, and stack signals as context
    - For `/compliance`: pass the domain (health → `health`, finance → `finance`, etc.)
-   - For `/scaffold`: pass detected or stated stack
+   - For `/coding`: pass detected or stated stack
 3. After the skill completes, show a brief summary of what was produced
 4. Ask: "**Continue to Phase N+1: [next skill]?** (yes / skip / stop)"
    - `yes` → proceed to next phase
@@ -179,12 +184,10 @@ Requirement: <one-line title>
 
 Completed phases:
   ✓ Requirements — X user stories, Y acceptance criteria
-  ✓ Design — C4 diagram, 1 ADR
-  ✓ Scaffold — Java/Spring Boot structure
-  ✓ Test Plan — JUnit5 stubs, coverage targets
+  ✓ Design — HLD + LLD saved to docs/, 1 ADR
+  ✓ Coding — code written, tests generated, validation passed
+  ✓ Test Plan — stubs + coverage targets
   ✓ Compliance — HIPAA: 3 controls applied
-  ✓ CI/CD — GitHub Actions pipeline
-  ✓ Deploy — Helm chart + values.yaml
 
 Skipped: [list any skipped phases]
 
@@ -203,4 +206,4 @@ Next steps:
 3. **Never skip the boundary check** between phases — always ask "Continue?".
 4. **If MCP fetch fails** (network, auth, missing field), fall back gracefully to "paste it here" — never abort.
 5. **Carry context forward**: each skill invocation gets the requirement title, domain, and stack signals so output is coherent across phases.
-6. **Respect `disable-model-invocation: true`** on scaffold, cicd, deploy — remind the user to explicitly confirm before those phases write files.
+6. **Respect `disable-model-invocation: true`** on coding — remind the user to explicitly confirm before that phase writes files.

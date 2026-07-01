@@ -1,83 +1,158 @@
 ---
 name: design
-description: This skill should be used when the user asks to "design the system", "create an architecture diagram", "draw a component diagram", "write an ADR", "architecture decision record", "tech stack recommendation", "system design for", "design the components of", "create a sequence diagram", "draw an ER diagram", "C4 diagram", "design the data model", "propose a solution architecture", or needs any form of system design or architectural documentation. Use this skill for technical design artifacts across any technology stack.
-version: 0.1.0
+description: This skill should be used when the user asks to "design the system", "create an architecture diagram", "draw a component diagram", "write an ADR", "architecture decision record", "tech stack recommendation", "system design for", "design the components of", "create a sequence diagram", "draw an ER diagram", "C4 diagram", "design the data model", "propose a solution architecture", "create HLD", "create LLD", "high level design", "low level design", or needs any form of system design or architectural documentation. Use this skill for technical design artifacts across any technology stack.
+version: 0.2.0
+disable-model-invocation: true
 ---
 
 # Architecture & Design Skill
 
-## Overview
+## Step 0 — Knowledge Graph Check
 
-This skill produces text-based system design artifacts: architecture diagrams (Mermaid), Architecture Decision Records (ADRs), tech stack evaluations, and component designs. All output is tech-stack agnostic — this skill works by understanding the problem and constraints before recommending any technology.
+Load `../shared/knowledge-graph.md` for the full protocol. Summary:
 
-## When to Use
+1. If `graphify-out/graph.json` exists → run `bash scripts/query-kg.sh "<system/service name + artifact type>"`
+2. If missing → run `bash scripts/setup-kg.sh` first, then query
+3. Inject results as KG Context (existing HLD/LLD/ADR docs, known components) before Step 1
 
-Invoke when the user needs to design a system, document a decision, create a diagram, or evaluate technology choices. This skill explicitly avoids prescribing solutions before understanding constraints.
+---
 
 ## Step-by-Step Process
 
 ### 1. Identify the Artifact Type
 
-| User says | Produce |
-|---|---|
-| "architecture diagram", "system design" | C4 context or container diagram in Mermaid |
-| "component diagram" | C4 component or class diagram in Mermaid |
-| "sequence diagram", "flow" | Mermaid `sequenceDiagram` |
-| "ER diagram", "data model" | Mermaid `erDiagram` |
-| "ADR", "architecture decision" | Nygard ADR format from `references/adr-template.md` |
-| "tech stack", "which technology" | Evaluation matrix from `references/tech-stack-evaluation.md` |
-| "design the system" (generic) | Start with C4 context diagram, then ask if detail is needed |
+| User says | Artifact | Saved to |
+|---|---|---|
+| "HLD", "high-level design", "system design", "architecture diagram" | C4 Context + Container diagrams + narrative | `docs/HLD.md` |
+| "LLD", "low-level design", "component diagram", "class diagram" | Component / class / sequence diagrams + API contracts | `docs/LLD.md` |
+| "sequence diagram", "flow" | Mermaid `sequenceDiagram` | `docs/LLD.md` |
+| "ER diagram", "data model" | Mermaid `erDiagram` | `docs/LLD.md` |
+| "ADR", "architecture decision" | Nygard ADR | `docs/ADR-NNN-<kebab-title>.md` |
+| "tech stack", "which technology" | Evaluation matrix + recommendation | inline only |
+| "design the system" (generic) | HLD first, then ask if LLD is also needed | `docs/HLD.md` |
 
-### 2. Ask Before Recommending (for tech stack decisions)
+All diagrams are Mermaid text-based (renders on GitHub, GitLab, Notion). Load `references/diagram-formats.md` for syntax starters.
 
-Before producing a tech stack recommendation, always ask:
-- What is the team's language preference or existing expertise?
-- What is the deployment target (cloud, on-prem, serverless)?
-- What are the performance/scale requirements?
-- Are there existing systems this must integrate with?
+### 2. Tech Stack Decisions — Collect Constraints First
 
-Only after gathering constraints, apply the scoring matrix from `references/tech-stack-evaluation.md`.
+Before recommending a tech stack, ask:
+1. Team's language preference or existing expertise
+2. Deployment target (cloud, on-prem, serverless)
+3. Performance/scale requirements
+4. Existing systems this must integrate with
 
-### 3. Produce Diagrams
+Apply scoring matrix from `references/tech-stack-evaluation.md`. Present matrix first, recommendation second — never the reverse.
 
-All diagrams must be text-based. Use Mermaid by default (renders on GitHub, GitLab, Notion, most editors). Reference `references/diagram-formats.md` for the exact syntax starters for each diagram type.
+### 3. Confirm Before Writing
 
-Default diagram type selection:
-- **New system, high-level**: C4 Context (`C4Context`)
-- **Services and their interactions**: C4 Container (`C4Container`)
-- **Internal design of one service**: Class or component diagram
-- **User flows or API interactions**: Sequence diagram
-- **Database design**: ER diagram
-- **HLD**: High-level architecture diagram (C4 context or container)
-- **LLD**: Low-level architecture diagram (class, component, or sequence)
+Show planned documents and destination paths. Wait for confirmation.
 
-### 4. Produce ADRs
+```
+[Design Skill] I'll create:
 
-Use the Nygard ADR format from `references/adr-template.md`. Never skip the **Consequences** section — it is the most important part for future readers. The ADR captures the decision as it was made, not as it looks in hindsight.
+  docs/HLD.md — C4 context + container diagrams, design decisions
+  docs/LLD.md — component diagram, sequence diagrams, data model, API contracts
 
-### 5. Output Format
-
-**For diagrams:**
-````
-## [Diagram Title]
-
-```mermaid
-[diagram code]
+I'll create docs/ if it doesn't exist. Proceed?
 ```
 
-### Key Design Points
-- [Explain a non-obvious element]
-- [Explain a constraint or trade-off visible in the diagram]
+### 4. Write to docs/
+
+After confirmation:
+1. Create `docs/` in the project root if it does not exist
+2. Write each document using the templates below
+3. ADRs: filename `docs/ADR-<NNN>-<kebab-title>.md`; increment NNN by reading existing ADR files
+
+---
+
+## Document Templates
+
+### HLD (`docs/HLD.md`)
+
+````markdown
+# High-Level Design: [System / Feature Name]
+
+## Overview
+[2–3 sentences: what this system does and why]
+
+## System Context
+
+```mermaid
+C4Context
+  [actors, external systems, boundaries]
+```
+
+## Container View
+
+```mermaid
+C4Container
+  [major deployable units and interactions]
+```
+
+## Key Design Decisions
+
+| Decision | Choice | Rationale |
+|---|---|---|
+| [e.g., Messaging] | [e.g., Kafka] | [e.g., ordered delivery, replay] |
+
+## Non-Functional Requirements
+
+| Attribute | Target |
+|---|---|
+| Availability | [e.g., 99.9%] |
+| Latency (p99) | [e.g., < 200ms] |
+| Data retention | [e.g., 90 days] |
 ````
 
-**For ADRs:** Use the template exactly as provided in `references/adr-template.md`.
+### LLD (`docs/LLD.md`)
 
-**For tech stack evaluations:** Use the scoring table from `references/tech-stack-evaluation.md` then add a prose recommendation paragraph.
+````markdown
+# Low-Level Design: [Service / Module Name]
+
+## Component Diagram
+
+```mermaid
+[class or component diagram]
+```
+
+## Sequence: [Primary Use Case]
+
+```mermaid
+sequenceDiagram
+  [critical request flow]
+```
+
+## Data Model
+
+```mermaid
+erDiagram
+  [entities and relationships]
+```
+
+## API Contracts
+
+| Method | Path | Request | Response |
+|---|---|---|---|
+| POST | /resource | {field: type} | {id: uuid} |
+
+## Error Handling
+
+| Scenario | Behavior |
+|---|---|
+| [e.g., upstream timeout] | [e.g., retry x3, then return 503] |
+````
+
+### ADR (`docs/ADR-NNN-title.md`)
+
+Use template from `references/adr-template.md` exactly. Never skip the **Consequences** section.
+
+---
 
 ## Key Rules
 
-- All diagrams must be text-based (Mermaid, PlantUML, or ASCII). Never output binary, SVG source, or image URLs.
-- Diagram titles must match what they actually represent — do not name a container diagram a "system architecture" if it's showing internal services.
-- For ADRs: the Status field must be one of: Proposed, Accepted, Deprecated, Superseded by [ADR-NNN].
-- For tech stack decisions: present the evaluation matrix first, then the recommendation — never lead with a recommendation before showing the evidence.
-- When the user asks for "a quick diagram", produce the diagram inline without the Key Design Points section.
+- Always write HLD and LLD to `docs/` — never leave design artifacts only in chat
+- Confirm planned files with the user before writing anything
+- Diagrams are Mermaid text only — no SVG, no image URLs, no binary
+- ADR Status must be one of: Proposed, Accepted, Deprecated, Superseded by [ADR-NNN]
+- Tech stack: evaluation matrix before recommendation, always
+- "Quick diagram" request → produce diagram inline only, skip the doc write
