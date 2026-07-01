@@ -9,7 +9,7 @@
     {
       "name": "techwave-toolkit",
       "source": ".",
-      "description": "SDLC workflow skills: orchestrate, requirements, design, scaffold, testing, compliance — tech-stack agnostic",
+      "description": "Dev-phase SDLC skills: orchestrate, requirements, design, coding (3-agent flow), test planning, compliance — tech-stack agnostic",
       "version": "0.2.0",
       "category": "development"
     }
