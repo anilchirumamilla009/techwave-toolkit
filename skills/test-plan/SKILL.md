@@ -14,6 +14,16 @@ This skill generates two outputs: (1) a written test plan document describing sc
 
 Invoke when the user wants to plan, structure, or generate tests for a feature, service, endpoint, or codebase. Works at any granularity — single function, full service, or entire system.
 
+## Step 0 — Knowledge Graph Check
+
+Load `../shared/knowledge-graph.md` for the full protocol. Summary:
+
+1. If `graphify-out/graph.json` exists → run `bash scripts/query-kg.sh "<module or service name being tested>"`
+2. If missing → run `bash scripts/setup-kg.sh` first, then query
+3. Inject results as KG Context (existing test files, coverage gaps, risky modules) before Step 1
+
+---
+
 ## Step-by-Step Process
 
 ### 1. Identify the Scope

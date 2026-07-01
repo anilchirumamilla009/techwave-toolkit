@@ -1,12 +1,12 @@
 {
   "name": "techwave-toolkit",
   "version": "0.2.0",
-  "description": "SDLC workflow skills: orchestrate, requirements, design, scaffold, testing, compliance, CI/CD, deployment — tech-stack agnostic",
+  "description": "Dev-phase SDLC skills: orchestrate, requirements, design, coding (3-agent flow), test planning, and compliance — tech-stack agnostic",
   "author": {
     "name": "Venkata Anil Kumar Chirumamilla",
     "email": "anil.chirumamilla@techwave.com"
   },
   "license": "MIT",
-  "keywords": ["sdlc", "orchestrator", "requirements", "design", "scaffold", "testing", "compliance", "cicd", "deployment"],
+  "keywords": ["sdlc", "orchestrator", "requirements", "design", "coding", "testing", "compliance"],
   "repository": "https://github.com/techwave/techwave-toolkit"
 }

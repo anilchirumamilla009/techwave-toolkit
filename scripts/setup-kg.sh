@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# setup-kg.sh — Install graphify and build the project knowledge graph.
+# Official graphify: https://graphify.net  (PyPI: pip install graphifyy)
+# Output: graphify-out/graph.json, graphify-out/GRAPH_REPORT.md, graphify-out/cache/
+set -euo pipefail
+
+if [ -f "graphify-out/graph.json" ]; then
+  echo "[kg] Knowledge graph already exists at graphify-out/graph.json — skipping build."
+  exit 0
+fi
+
+# Install graphify from PyPI if not on PATH
+if ! command -v graphify >/dev/null 2>&1; then
+  echo "[kg] graphify not found. Installing from PyPI (https://graphify.net)..."
+  if command -v pip >/dev/null 2>&1; then
+    pip install graphifyy
+  elif command -v pip3 >/dev/null 2>&1; then
+    pip3 install graphifyy
+  else
+    echo "[kg] pip not available. Falling back to built-in graph builder..." >&2
+    if ! command -v python3 >/dev/null 2>&1; then
+      echo "[kg] ERROR: python3 is required for the built-in builder. Install Python 3 and retry." >&2
+      exit 1
+    fi
+    python3 "$(dirname "$0")/build-graph.py" .
+    exit 0
+  fi
+  # Integrate with Claude Code (adds CLAUDE.md knowledge graph context + PreToolUse hook)
+  graphify claude install
+fi
+
+# Build the knowledge graph from the project root
+echo "[kg] Building knowledge graph..."
+graphify .
+
+# Install post-commit hook for automatic incremental AST rebuilds (no API cost)
+if [ -d ".git" ]; then
+  graphify hook install
+  echo "[kg] Post-commit hook installed — graph rebuilds automatically after each commit."
+fi
+
+echo "[kg] Knowledge graph ready:"
+echo "[kg]   graphify-out/graph.json      — queryable graph"
+echo "[kg]   graphify-out/GRAPH_REPORT.md — core nodes, suggested questions"
+echo "[kg]   graphify-out/cache/          — incremental AST cache"
