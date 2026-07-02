@@ -1,63 +1,98 @@
 # Knowledge Graph Protocol
 
-Shared by all skills. Load this file as Step 0 before any skill's Step 1.
+Every skill runs this protocol as Step 0 before any other work.
+The goal: understand the project from its knowledge graph before generating anything.
 
-Graphify reference: https://graphify.net  |  Install: `pip install graphifyy`
+Official graphify: https://graphify.net | PyPI package: `pip install graphifyy`
 
 ---
 
-## Check → Build → Query
+## Full Protocol (run in order, do not skip steps)
 
+### Step 0.1 — Ensure graphify is installed
+
+Use the Bash tool to check:
+
+```bash
+command -v graphify
 ```
-graphify-out/graph.json exists?
-  YES → query it
-  NO  → run bash scripts/setup-kg.sh, then query
+
+If graphify is NOT found:
+
+```bash
+pip install graphifyy || pip3 install graphifyy
 ```
 
-### Step-by-step
+Confirm installation succeeded before continuing.
 
-1. **Check** — does `graphify-out/graph.json` exist in the project root?
-   - YES → skip to step 2
-   - NO  → run `bash scripts/setup-kg.sh`
-     - Installs graphify via `pip install graphifyy && graphify claude install`
-       (official source: https://graphify.net)
-     - Runs `graphify .` in the project root
-     - Installs a post-commit hook (`graphify hook install`) for automatic AST rebuilds
+---
 
-2. **Query** — run `bash scripts/query-kg.sh "<context>"` using the per-skill context from the table below
-   - Returns matching nodes from `graphify-out/graph.json` (NetworkX JSON: functions, classes, imports, call relationships, confidence-tagged edges)
-   - Also surfaces the top of `graphify-out/GRAPH_REPORT.md` (core nodes, surprises, suggested questions)
+### Step 0.2 — Build the knowledge graph if missing
 
-3. **Inject** — treat query output as **KG Context** for this skill's execution:
-   - Existing artifact found (ADR, test file, Dockerfile, pipeline) → offer to extend/update it, not regenerate
-   - Related module or entity found → reference it in imports, dependencies, design decisions
-   - Nothing returned → proceed with normal skill flow unchanged
+Use the Bash tool to check whether the graph exists:
 
-## Output files graphify produces
+```bash
+test -f graphify-out/GRAPH_REPORT.md && echo "EXISTS" || echo "MISSING"
+```
 
-| File | Contents |
+If MISSING:
+
+```bash
+graphify .
+graphify claude install
+```
+
+`graphify .` scans the project and writes:
+- `graphify-out/GRAPH_REPORT.md` — human-readable summary of core modules, key entities, suggested questions
+- `graphify-out/graph.json` — full NetworkX graph (functions, classes, imports, call edges)
+- `graphify-out/graph.html` — interactive visualization
+- `graphify-out/cache/` — incremental AST cache
+
+`graphify claude install` wires the graph into Claude Code so it stays current automatically.
+
+Also add `graphify-out/` to `.gitignore` if not already there:
+
+```bash
+grep -qF "graphify-out/" .gitignore 2>/dev/null || printf "\n# graphify knowledge graph\ngraphify-out/\n" >> .gitignore
+```
+
+---
+
+### Step 0.3 — Read the knowledge graph
+
+Use the Read tool to read `graphify-out/GRAPH_REPORT.md` in full.
+
+Extract and hold as **KG Context**:
+- Core modules and their stated purpose
+- Key classes, functions, entities relevant to the current task
+- Dominant stack and framework
+- Existing artifacts related to what this skill will produce
+
+Do NOT scan source files to build this understanding. The report is the source of truth.
+Only read specific source files if you need detail not present in the report.
+
+---
+
+### Step 0.4 — Apply KG Context
+
+Use KG Context throughout the skill execution:
+
+| KG reveals | Action |
 |---|---|
-| `graphify-out/graph.json` | NetworkX JSON graph — nodes (functions, classes, files) + edges (imports, calls, inheritance) with EXTRACTED/INFERRED confidence tags |
-| `graphify-out/GRAPH_REPORT.md` | Human-readable summary — core nodes, surprises, suggested questions |
-| `graphify-out/graph.html` | Interactive visualization (open in browser) |
-| `graphify-out/cache/` | Incremental AST cache (tree-sitter, rebuilt on commit) |
+| Existing artifact (design doc, test file, migration) | Offer to extend/update it — do not regenerate from scratch |
+| Related module or pattern | Reference it in imports, dependencies, design decisions |
+| Stack confirmed | Skip stack detection — use what the graph shows |
+| Nothing relevant | Proceed with the skill's normal flow unchanged |
 
-## Per-Skill Query Context
+---
 
-| Skill | Query string to pass |
+## Per-Skill Focus when reading GRAPH_REPORT.md
+
+| Skill | What to extract |
 |---|---|
-| orchestrator | Feature title + type from the parsed requirement struct |
-| requirements | Feature name or epic title from `$ARGUMENTS` |
-| design | System/service name + artifact type (HLD, LLD, ADR) |
-| coding | Stack name + feature/module name from `$ARGUMENTS` |
-| test-plan | Module or service name being tested |
-| compliance | Domain keyword (hipaa / pci / gdpr / soc2) + service name |
-| cicd | Platform name + stack + repo name |
-| deploy | Deployment target + service name |
-
-## Rules
-
-- KG Context is advisory — it informs output, never blocks it
-- If query returns nothing, continue with normal skill flow unchanged
-- Never rebuild mid-skill; if `graph.json` is missing at Step 0, build once and proceed
-- The post-commit hook keeps the graph current automatically after `graphify hook install`
+| orchestrator | Completed phases, existing artifacts, dominant stack |
+| requirements | Features or modules related to the requested epic/feature |
+| design | Existing design docs (`docs/HLD.md`, `docs/LLD.md`, ADRs), known components |
+| coding | Existing modules, patterns, imports used by related code |
+| test-plan | Existing test files, untested modules, risky areas in the report |
+| compliance | Sensitive data flows, auth patterns, logging, existing compliance controls |

@@ -14,13 +14,24 @@ This skill generates two outputs: (1) a written test plan document describing sc
 
 Invoke when the user wants to plan, structure, or generate tests for a feature, service, endpoint, or codebase. Works at any granularity — single function, full service, or entire system.
 
-## Step 0 — Knowledge Graph Check
+## Step 0 — Build and Read the Knowledge Graph (REQUIRED)
 
-Load `../shared/knowledge-graph.md` for the full protocol. Summary:
+**Complete all sub-steps before Step 1. Use Bash and Read tools directly — do not ask the user to run anything.**
 
-1. If `graphify-out/graph.json` exists → run `bash scripts/query-kg.sh "<module or service name being tested>"`
-2. If missing → run `bash scripts/setup-kg.sh` first, then query
-3. Inject results as KG Context (existing test files, coverage gaps, risky modules) before Step 1
+**0.1 Install graphify if missing**
+```bash
+command -v graphify || pip install graphifyy || pip3 install graphifyy
+```
+
+**0.2 Build the graph if missing**
+```bash
+test -f graphify-out/GRAPH_REPORT.md && echo "EXISTS" || (graphify . && graphify claude install && grep -qF "graphify-out/" .gitignore 2>/dev/null || printf "\n# graphify\ngraphify-out/\n" >> .gitignore)
+```
+
+**0.3 Read the graph**
+Read `graphify-out/GRAPH_REPORT.md`. Extract: existing test files, untested modules, risky or complex areas highlighted in the report, dominant stack and framework. Target the test plan at real gaps from the graph, not generic coverage. Hold as **KG Context**.
+
+Full protocol: `../shared/knowledge-graph.md`
 
 ---
 
@@ -35,7 +46,7 @@ Ask if not clear from context:
 
 ### 2. Detect the Tech Stack
 
-Check for framework marker files (same logic as `/scaffold`):
+Check for framework marker files (same logic as `/coding`):
 - `package.json` / `tsconfig.json` → Node.js/TypeScript
 - `go.mod` → Go
 - `pom.xml` / `build.gradle` → Java
