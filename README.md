@@ -2,7 +2,7 @@
 
 A Claude Code plugin providing AI-assisted skills for the development phases of the SDLC. Tech-stack agnostic — works with Node.js, Python, Go, Java, Rust, React, and more.
 
-**Version:** 0.2.0 · **License:** MIT · **Author:** Venkata Anil Kumar Chirumamilla
+**Version:** 0.3.0 · **License:** MIT · **Author:** Venkata Anil Kumar Chirumamilla
 
 ---
 
@@ -68,64 +68,66 @@ techwave-toolkit wraps the development phases of the SDLC into a Claude Code plu
 
 ```bash
 # Step 1 — register the GitHub repo as a marketplace
-# Marketplace name comes from .claude-plugin/marketplace.json → "techwave-development-toolkit"
+# Claude Code reads .claude-plugin/marketplace.json → registers as "techwave-dev-toolkit"
 claude plugin marketplace add anilchirumamilla009/techwave-toolkit
 
 # Step 2 — install the plugin
-claude plugin install techwave-toolkit@techwave-development-toolkit
+claude plugin install techwave-dev-toolkit@techwave-dev-toolkit
 ```
 
 To update to the latest version:
 
 ```bash
-claude plugin marketplace update techwave-development-toolkit
-claude plugin update techwave-toolkit
+claude plugin marketplace update techwave-dev-toolkit
+claude plugin update techwave-dev-toolkit
 ```
 
 ---
 
 ## Knowledge Graph
 
-Every skill runs a **Step 0** before its main logic: it checks for `graphify-out/graph.json` in the project root. If it does not exist, `scripts/setup-kg.sh` installs [graphify](https://graphify.net) (official PyPI package) and builds the graph. The skill then queries it for context before generating any output.
+Every skill runs a fully automatic **Step 0** before its main logic. No manual setup is needed — invoking any skill for the first time in a project handles everything automatically.
 
-### How it works
+### What happens automatically on first skill invocation
 
 ```
-Skill invoked
-  └─ Step 0: graphify-out/graph.json exists?
-       NO  → bash scripts/setup-kg.sh
-               installs graphify (pip install graphifyy && graphify claude install)
-               runs: graphify .
-               installs post-commit hook: graphify hook install
-       YES → bash scripts/query-kg.sh "<context>"
-               searches graph.json (NetworkX JSON) for matching nodes
-               surfaces GRAPH_REPORT.md for broader context
-               results injected as KG Context into skill execution
+/requirements  (or any skill)
+  │
+  ├─ 0.1  Is graphify installed?
+  │         NO  → pip install graphifyy          (installs automatically)
+  │         YES → continue
+  │
+  ├─ 0.2  Does graphify-out/GRAPH_REPORT.md exist?
+  │         NO  → graphify .                     (builds the knowledge graph)
+  │              graphify claude install          (wires into Claude Code)
+  │              adds graphify-out/ to .gitignore
+  │         YES → continue
+  │
+  └─ 0.3  Read graphify-out/GRAPH_REPORT.md
+            extracts: modules, stack, existing artifacts relevant to this skill
+            proceeds with full project context — no blind code scanning
 ```
+
+From the second invocation onwards, graphify is already installed and the graph already exists — Step 0 takes under a second.
 
 ### What graphify produces
 
 | File | Contents |
 |---|---|
-| `graphify-out/graph.json` | NetworkX JSON — functions, classes, imports, call edges (EXTRACTED/INFERRED confidence tags) |
-| `graphify-out/GRAPH_REPORT.md` | Core nodes, surprises, suggested questions |
-| `graphify-out/graph.html` | Interactive visualization |
-| `graphify-out/cache/` | Incremental AST cache (tree-sitter, rebuilt on each commit) |
+| `graphify-out/GRAPH_REPORT.md` | Human-readable summary — core modules, key entities, suggested questions. Read by every skill. |
+| `graphify-out/graph.json` | Full NetworkX graph — functions, classes, imports, call edges with confidence tags |
+| `graphify-out/graph.html` | Interactive visualization (open in browser) |
+| `graphify-out/cache/` | Incremental AST cache — rebuilt automatically after each commit |
 
-### Manual build / rebuild
+### Rebuild the graph manually
+
+The graph stays current automatically via the post-commit hook installed by `graphify claude install`. To force a full rebuild at any time:
 
 ```bash
-# First build (or full rebuild after major restructuring)
-bash scripts/setup-kg.sh
-
-# Query the graph directly
-bash scripts/query-kg.sh "UserService"
-bash scripts/query-kg.sh "payment hipaa"
+graphify .
 ```
 
-### When to rebuild
-
-The post-commit hook (`graphify hook install`) handles AST-level rebuilds automatically after each commit. For doc or image changes, run `bash scripts/setup-kg.sh` manually. You can also delete `graphify-out/` and let the next skill invocation rebuild it from scratch.
+Or delete `graphify-out/` and invoke any skill — Step 0 will rebuild it.
 
 ---
 
@@ -136,18 +138,20 @@ The post-commit hook (`graphify hook install`) handles AST-level rebuilds automa
 claude plugin list
 
 # Show skill details, trigger phrases, and estimated token cost
-claude plugin details techwave-toolkit
+claude plugin details techwave-dev-toolkit
 
-# Pull the latest version (if installed from marketplace)
-claude plugin update techwave-toolkit
+# Pull the latest version from the marketplace
+claude plugin marketplace update techwave-dev-toolkit
+claude plugin update techwave-dev-toolkit
 
 # Disable without uninstalling (skills stop loading)
-claude plugin disable techwave-toolkit
+claude plugin disable techwave-dev-toolkit
 
 # Re-enable a disabled plugin
-claude plugin enable techwave-toolkit
+claude plugin enable techwave-dev-toolkit
 
 # Completely remove the plugin and its hooks
+claude plugin uninstall techwave-dev-toolkit
 
 # Validate plugin.json and all SKILL.md frontmatter (run from the plugin root)
 claude plugin validate .
@@ -842,12 +846,19 @@ disable-model-invocation: true   # present on file-writing skills only
 
 Claude Code loads all skills at session start. When you type a `/command` or a phrase matching the `description` field, Claude Code invokes the corresponding skill.
 
+### Execution order
+
+Every skill follows this order:
+
+1. **Step 0** — build and read the knowledge graph (fully automatic — installs graphify if needed, builds graph if missing, reads `graphify-out/GRAPH_REPORT.md` for project context)
+2. **Skill logic** — generates output informed by real project knowledge, not blind scanning
+
 ### Progressive disclosure
 
 Skills use a two-layer pattern to keep context cost low:
 
-1. **`SKILL.md`** — core instructions (~1,000–2,000 words), always loaded when the skill is invoked.
-2. **`references/*.md`** — dense domain knowledge (templates, code patterns, checklists), loaded on-demand only when needed by the core skill.
+1. **`SKILL.md`** — core instructions, always loaded when the skill is invoked
+2. **`references/*.md`** — dense domain knowledge (templates, code patterns, checklists), loaded on-demand only when needed
 
 ### `disable-model-invocation: true`
 
