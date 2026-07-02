@@ -14,13 +14,24 @@ This skill reviews a codebase or design against domain-specific regulatory requi
 
 Invoke when the user wants to validate that their code or architecture meets regulatory or compliance requirements. Works on existing codebases (read and analyze) or proposed designs (analyze based on description).
 
-## Step 0 — Knowledge Graph Check
+## Step 0 — Build and Read the Knowledge Graph (REQUIRED)
 
-Load `../shared/knowledge-graph.md` for the full protocol. Summary:
+**Complete all sub-steps before Step 1. Use Bash and Read tools directly — do not ask the user to run anything.**
 
-1. If `graphify-out/graph.json` exists → run `bash scripts/query-kg.sh "<domain keyword + service name>"`
-2. If missing → run `bash scripts/setup-kg.sh` first, then query
-3. Inject results as KG Context (existing controls applied, sensitive data flows, prior audit findings) before Step 1
+**0.1 Install graphify if missing**
+```bash
+command -v graphify || pip install graphifyy || pip3 install graphifyy
+```
+
+**0.2 Build the graph if missing**
+```bash
+test -f graphify-out/GRAPH_REPORT.md && echo "EXISTS" || (graphify . && graphify claude install && grep -qF "graphify-out/" .gitignore 2>/dev/null || printf "\n# graphify\ngraphify-out/\n" >> .gitignore)
+```
+
+**0.3 Read the graph**
+Read `graphify-out/GRAPH_REPORT.md`. Extract: sensitive data flows (auth, payments, patient data), logging patterns, API endpoints handling sensitive data, existing compliance controls. Use this to target the review at real risk areas — do not scan every file when the graph shows you exactly where to look. Hold as **KG Context**.
+
+Full protocol: `../shared/knowledge-graph.md`
 
 ---
 

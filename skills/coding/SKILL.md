@@ -15,15 +15,24 @@ Each agent runs to completion before the next begins. Context passes forward aut
 
 ---
 
-## Step 0 — Knowledge Graph Check
+## Step 0 — Build and Read the Knowledge Graph (REQUIRED)
 
-Load `../shared/knowledge-graph.md` for the full protocol. Summary:
+**Complete all sub-steps before Phase 1. Use Bash and Read tools directly — do not ask the user to run anything.**
 
-1. If `graphify-out/graph.json` exists → run `bash scripts/query-kg.sh "<stack + feature/module name from $ARGUMENTS>"`
-2. If missing → run `bash scripts/setup-kg.sh` first, then query
-3. Inject results as KG Context (existing modules, patterns, dependencies) before Phase 1
+**0.1 Install graphify if missing**
+```bash
+command -v graphify || pip install graphifyy || pip3 install graphifyy
+```
 
-KG Context is passed to the Coding Agent. The Unit Test and Validator agents inherit it automatically.
+**0.2 Build the graph if missing**
+```bash
+test -f graphify-out/GRAPH_REPORT.md && echo "EXISTS" || (graphify . && graphify claude install && grep -qF "graphify-out/" .gitignore 2>/dev/null || printf "\n# graphify\ngraphify-out/\n" >> .gitignore)
+```
+
+**0.3 Read the graph**
+Read `graphify-out/GRAPH_REPORT.md`. Extract: existing modules and their patterns, imports used by related code, dominant stack and framework, any existing code related to `$ARGUMENTS`. Pass as **KG Context** to the Coding Agent — Unit Test and Validator agents inherit it automatically.
+
+Full protocol: `../shared/knowledge-graph.md`
 
 ---
 

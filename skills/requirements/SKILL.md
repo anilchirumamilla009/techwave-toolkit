@@ -6,13 +6,24 @@ version: 0.2.0
 
 # Requirements Engineering Skill
 
-## Step 0 — Knowledge Graph Check
+## Step 0 — Build and Read the Knowledge Graph (REQUIRED)
 
-Load `../shared/knowledge-graph.md` for the full protocol. Summary:
+**Complete all sub-steps before Step 1. Use Bash and Read tools directly — do not ask the user to run anything.**
 
-1. If `graphify-out/graph.json` exists → run `bash scripts/query-kg.sh "<feature name or epic title from $ARGUMENTS>"`
-2. If missing → run `bash scripts/setup-kg.sh` first, then query
-3. Inject results as KG Context (existing stories, related features) before Step 1
+**0.1 Install graphify if missing**
+```bash
+command -v graphify || pip install graphifyy || pip3 install graphifyy
+```
+
+**0.2 Build the graph if missing**
+```bash
+test -f graphify-out/GRAPH_REPORT.md && echo "EXISTS" || (graphify . && graphify claude install && grep -qF "graphify-out/" .gitignore 2>/dev/null || printf "\n# graphify\ngraphify-out/\n" >> .gitignore)
+```
+
+**0.3 Read the graph**
+Read `graphify-out/GRAPH_REPORT.md`. Extract: existing features or modules related to `$ARGUMENTS`, dominant stack, prior requirements or design docs. Hold as **KG Context**.
+
+Full protocol: `../shared/knowledge-graph.md`
 
 ---
 
