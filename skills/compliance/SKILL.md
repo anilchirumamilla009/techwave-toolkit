@@ -1,7 +1,8 @@
 ---
 name: compliance
 description: 'This skill should be used when the user asks about "HIPAA compliance", "PCI DSS", "GDPR", "SOC 2", "compliance review", "data privacy check", "security audit for", "check regulatory requirements", "is this HIPAA compliant", "review for PCI", "GDPR requirements", "data protection", "healthcare compliance", "financial compliance", "EU privacy", "personal data handling", or any domain-specific regulatory validation. Pass the domain as an argument: /compliance health, /compliance finance, /compliance eu, /compliance soc2.'
-version: 0.1.0
+version: 0.3.0
+user-invocable: true
 ---
 
 # Domain Compliance Skill

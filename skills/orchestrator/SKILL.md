@@ -1,8 +1,9 @@
 ---
 name: orchestrator
 description: This skill should be used when the user says "start sdlc", "kick off development", "begin the workflow", "orchestrate this feature", "run the full pipeline", "drive development from this ticket", "use this Jira ticket", "use this wiki page", "start from this requirement", "process this story", "begin with PROJ-123", or provides a ticket ID like ABC-123 or a Confluence/GitHub URL as the starting point for development.
-version: 0.1.0
+version: 0.3.0
 disable-model-invocation: true
+user-invocable: true
 ---
 
 ## Overview

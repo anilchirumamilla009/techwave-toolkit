@@ -2,7 +2,7 @@
 
 A Claude Code plugin providing AI-assisted skills for the development phases of the SDLC. Tech-stack agnostic — works with Node.js, Python, Go, Java, Rust, React, and more.
 
-**Version:** 0.3.0 · **License:** MIT · **Author:** Venkata Anil Kumar Chirumamilla
+**Version:** 0.5.0 · **License:** MIT · **Author:** Venkata Anil Kumar Chirumamilla
 
 ---
 
@@ -55,33 +55,55 @@ techwave-toolkit wraps the development phases of the SDLC into a Claude Code plu
 
 ## Prerequisites
 
-- **Claude Code** CLI installed and authenticated (`claude --version` must succeed)
 - **bash** available in `PATH` — required by the compliance-scan hook
+- **Python + pip** — required by Step 0 to install graphify (`pip install graphifyy`)
 - **jq** (optional but recommended) — used by the hook to parse file paths from tool events
-- An active Claude Code session (the plugin is loaded per-session or permanently via symlink)
+- Either **Claude Code CLI** or **GitHub Copilot CLI** (or both)
 
 ---
 
 ## Installation
 
-### Option 1 — Install from GitHub via marketplace
+This plugin works with both **Claude Code CLI** and **GitHub Copilot CLI**. The skill content is identical — only the install command differs.
+
+---
+
+### Claude Code CLI
 
 ```bash
 # Step 1 — register the GitHub repo as a marketplace
-# The marketplace key is chosen by Claude Code on first add and stored in ~/.claude/settings.json
-# For this repo it registers as "techwave"
+# Registers as "techwave" in ~/.claude/settings.json
 claude plugin marketplace add anilchirumamilla009/techwave-toolkit
 
 # Step 2 — install the plugin
-# Format: claude plugin install <plugin-name>@<marketplace-key-from-settings.json>
-claude plugin install techwave-dev-toolkit@techwave
+claude plugin install techwave-dev@techwave
 ```
 
-To update to the latest version:
+To update:
 
 ```bash
 claude plugin marketplace update techwave
-claude plugin update techwave-dev-toolkit
+claude plugin update techwave-dev
+```
+
+---
+
+### GitHub Copilot CLI
+
+```bash
+# Step 1 — register the GitHub repo as a marketplace
+# Registers as "techwave" in ~/.copilot/settings.json
+copilot plugin marketplace add anilchirumamilla009/techwave-toolkit
+
+# Step 2 — install the plugin
+copilot plugin install techwave-dev@techwave
+```
+
+To update:
+
+```bash
+copilot plugin marketplace update techwave
+copilot plugin update techwave-dev
 ```
 
 ---
@@ -135,28 +157,32 @@ Or delete `graphify-out/` and invoke any skill — Step 0 will rebuild it.
 
 ## Plugin Management
 
+Commands are identical between the two CLIs — just swap `claude` for `copilot`.
+
+### Claude Code CLI
+
 ```bash
-# List all installed plugins and their versions
-claude plugin list
+claude plugin list                                    # list installed plugins
+claude plugin details techwave-dev                    # show skill details
+claude plugin marketplace update techwave             # fetch latest from GitHub
+claude plugin update techwave-dev                     # apply the update
+claude plugin disable techwave-dev                    # disable without uninstalling
+claude plugin enable techwave-dev                     # re-enable
+claude plugin uninstall techwave-dev                  # remove completely
+claude plugin validate .                              # validate from plugin root
+```
 
-# Show skill details, trigger phrases, and estimated token cost
-claude plugin details techwave-dev-toolkit
+### GitHub Copilot CLI
 
-# Pull the latest version from the marketplace
-claude plugin marketplace update techwave
-claude plugin update techwave-dev-toolkit
-
-# Disable without uninstalling (skills stop loading)
-claude plugin disable techwave-dev-toolkit
-
-# Re-enable a disabled plugin
-claude plugin enable techwave-dev-toolkit
-
-# Completely remove the plugin and its hooks
-claude plugin uninstall techwave-dev-toolkit
-
-# Validate plugin.json and all SKILL.md frontmatter (run from the plugin root)
-claude plugin validate .
+```bash
+copilot plugin list
+copilot plugin details techwave-dev
+copilot plugin marketplace update techwave
+copilot plugin update techwave-dev
+copilot plugin disable techwave-dev
+copilot plugin enable techwave-dev
+copilot plugin uninstall techwave-dev
+copilot plugin validate .
 ```
 
 ---
@@ -713,9 +739,9 @@ AWS access key IDs in the format `AKIA` followed by 16 uppercase alphanumeric ch
 ### Example warning output
 
 ```
-[techwave-toolkit] WARNING: Possible hardcoded credential detected in src/config.ts. Use environment variables or a secrets manager instead.
-[techwave-toolkit] WARNING: Possible PII in log statement detected in src/service/user.ts. Remove PII from logs or use pseudonymization.
-[techwave-toolkit] WARNING: Possible AWS Access Key ID detected in scripts/deploy.sh. Revoke and rotate this key immediately.
+[techwave-dev] WARNING: Possible hardcoded credential detected in src/config.ts. Use environment variables or a secrets manager instead.
+[techwave-dev] WARNING: Possible PII in log statement detected in src/service/user.ts. Remove PII from logs or use pseudonymization.
+[techwave-dev] WARNING: Possible AWS Access Key ID detected in scripts/deploy.sh. Revoke and rotate this key immediately.
 ```
 
 ---
@@ -835,22 +861,29 @@ techwave-toolkit/
 
 ## How Skills Work
 
-Each skill is a `SKILL.md` file with a YAML frontmatter block:
+Each skill is a `SKILL.md` file with a YAML frontmatter block. The same file works for both CLIs — each reads only the fields it understands and ignores the rest:
 
 ```yaml
 ---
-name: <skill-name>
-description: <trigger phrases — what the user must say to invoke this skill>
-version: 0.1.0
-disable-model-invocation: true   # present on file-writing skills only
+name: coding
+description: <trigger phrases>
+version: 0.3.0
+disable-model-invocation: true   # Claude Code: prevents the model auto-invoking this skill
+user-invocable: true             # Copilot CLI: enables /coding slash command
 ---
 ```
 
-Claude Code loads all skills at session start. When you type a `/command` or a phrase matching the `description` field, Claude Code invokes the corresponding skill.
+| Frontmatter field | Claude Code | Copilot CLI |
+|---|---|---|
+| `name` | skill identifier | skill identifier |
+| `description` | trigger phrase matching | trigger phrase matching |
+| `version` | update detection | update detection |
+| `disable-model-invocation: true` | blocks auto-invocation | ignored |
+| `user-invocable: true` | ignored | enables `/skill-name` command |
 
 ### Execution order
 
-Every skill follows this order:
+Every skill follows this order regardless of which CLI is used:
 
 1. **Step 0** — build and read the knowledge graph (fully automatic — installs graphify if needed, builds graph if missing, reads `graphify-out/GRAPH_REPORT.md` for project context)
 2. **Skill logic** — generates output informed by real project knowledge, not blind scanning
@@ -862,9 +895,16 @@ Skills use a two-layer pattern to keep context cost low:
 1. **`SKILL.md`** — core instructions, always loaded when the skill is invoked
 2. **`references/*.md`** — dense domain knowledge (templates, code patterns, checklists), loaded on-demand only when needed
 
-### `disable-model-invocation: true`
+### Hooks
 
-The `/coding` skill carries this flag. It prevents Claude Code from auto-invoking it without an explicit user command. The skill always confirms the planned directory structure with you before writing any files.
+Both CLIs fire a compliance-scan hook after every file write:
+
+| File | Used by |
+|---|---|
+| `hooks/hooks.json` | Claude Code |
+| `hooks/copilot-hooks.json` | GitHub Copilot CLI |
+
+The same `hooks/compliance-scan.sh` script runs for both — it scans written files for hardcoded credentials and PII in logs.
 
 ---
 

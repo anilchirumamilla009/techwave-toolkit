@@ -1,8 +1,9 @@
 ---
 name: coding
 description: This skill should be used when the user asks to "scaffold a project", "generate boilerplate", "bootstrap a new service", "initialize a codebase", "create project structure", "build a new app", "set up project skeleton", "generate a new app", "write the code for", "implement this feature", "create the folder structure", or "start a new project". Drives a sequential Coding Agent → Unit Test Agent → Validator Agent flow.
-version: 0.2.0
+version: 0.3.0
 disable-model-invocation: true
+user-invocable: true
 ---
 
 # Coding Skill — Multi-Agent Sequential Flow

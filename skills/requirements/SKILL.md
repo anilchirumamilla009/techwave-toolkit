@@ -1,7 +1,8 @@
 ---
 name: requirements
 description: This skill should be used when the user asks to "write user stories", "define acceptance criteria", "write BDD scenarios", "break down this epic", "capture requirements for", "write specs for", "create acceptance tests definition", "document requirements", "define done criteria", "write feature requirements", "create a product backlog item", or needs structured requirements for any feature or system. Use this skill to transform vague ideas into well-formed, behavior-first requirements artifacts.
-version: 0.2.0
+version: 0.3.0
+user-invocable: true
 ---
 
 # Requirements Engineering Skill

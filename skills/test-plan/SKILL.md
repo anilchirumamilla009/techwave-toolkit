@@ -1,7 +1,8 @@
 ---
 name: test-plan
 description: This skill should be used when the user asks to "create a test plan", "write tests for", "generate test cases", "plan unit tests", "plan e2e tests", "test strategy for", "what should we test", "generate integration tests", "create a testing strategy", "write test stubs", "generate test coverage", "QA plan", or needs any form of structured testing approach for a feature, service, or codebase. This skill generates both the written test plan document and runnable test stubs.
-version: 0.1.0
+version: 0.3.0
+user-invocable: true
 ---
 
 # Testing Skill

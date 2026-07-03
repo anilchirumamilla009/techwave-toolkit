@@ -1,8 +1,9 @@
 ---
 name: design
 description: This skill should be used when the user asks to "design the system", "create an architecture diagram", "draw a component diagram", "write an ADR", "architecture decision record", "tech stack recommendation", "system design for", "design the components of", "create a sequence diagram", "draw an ER diagram", "C4 diagram", "design the data model", "propose a solution architecture", "create HLD", "create LLD", "high level design", "low level design", or needs any form of system design or architectural documentation. Use this skill for technical design artifacts across any technology stack.
-version: 0.2.0
+version: 0.3.0
 disable-model-invocation: true
+user-invocable: true
 ---
 
 # Architecture & Design Skill

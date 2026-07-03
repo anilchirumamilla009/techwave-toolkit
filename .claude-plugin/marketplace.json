@@ -1,5 +1,5 @@
 {
-  "name": "techwave-dev-toolkit",
+  "name": "techwave-dev",
   "owner": {
     "name": "Venkata Anil Kumar Chirumamilla",
     "email": "anil.chirumamilla@techwave.com"
@@ -7,10 +7,10 @@
   "description": "TechWave SDLC toolkit plugins",
   "plugins": [
     {
-      "name": "techwave-dev-toolkit",
+      "name": "techwave-dev",
       "source": ".",
       "description": "Dev-phase SDLC skills: orchestrate, requirements, design, coding (3-agent flow), test planning, compliance — tech-stack agnostic",
-      "version": "0.3.0",
+      "version": "0.5.0",
       "category": "development"
     }
   ]

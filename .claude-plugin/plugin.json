@@ -1,6 +1,6 @@
 {
-  "name": "techwave-dev-toolkit",
-  "version": "0.3.0",
+  "name": "techwave-dev",
+  "version": "0.5.0",
   "description": "Dev-phase SDLC skills: orchestrate, requirements, design, coding (3-agent flow), test planning, and compliance — tech-stack agnostic",
   "author": {
     "name": "Venkata Anil Kumar Chirumamilla",
