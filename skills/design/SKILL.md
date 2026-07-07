@@ -12,6 +12,9 @@ user-invocable: true
 
 **Complete all sub-steps before Step 1. Use Bash and Read tools directly — do not ask the user to run anything.**
 
+**0.0 Read Stack Config (do this first)**
+Use the Read tool: try `.github/tech-stack.md`, then `.claude/tech-stack.md`. If found, hold as **Stack Config** — skip the constraint-gathering questions in Step 2 (stack, deployment target, etc. are already declared); proceed straight to the scoring matrix.
+
 **0.1 Install graphify if missing**
 ```bash
 command -v graphify || pip install graphifyy || pip3 install graphifyy

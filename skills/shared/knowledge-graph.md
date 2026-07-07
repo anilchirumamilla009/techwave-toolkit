@@ -9,6 +9,21 @@ Official graphify: https://graphify.net | PyPI package: `pip install graphifyy`
 
 ## Full Protocol (run in order, do not skip steps)
 
+### Step 0.0 — Read Stack Config (do this first)
+
+Use the Read tool to check for a team-maintained stack declaration in the target project:
+
+1. Try **`.github/tech-stack.md`** first
+2. If not found, try **`.claude/tech-stack.md`**
+
+**If found:** Hold the full file content as **Stack Config**. This is the authoritative source for stack, framework, test runner, package manager, and any declared compliance domain. No marker-file detection is needed in any later step — Stack Config wins.
+
+**If not found:** Stack Config = none. Continue with Step 0.1 and rely on graphify KG + marker-file inference as before.
+
+Stack Config and KG are complementary: Stack Config declares what the team *chose*, KG shows what is *actually in the codebase*. Both are used together.
+
+---
+
 ### Step 0.1 — Ensure graphify is installed
 
 Use the Bash tool to check:
@@ -73,16 +88,17 @@ Only read specific source files if you need detail not present in the report.
 
 ---
 
-### Step 0.4 — Apply KG Context
+### Step 0.4 — Apply KG Context and Stack Config
 
-Use KG Context throughout the skill execution:
+Use both KG Context and Stack Config throughout the skill execution:
 
-| KG reveals | Action |
+| Signal | Action |
 |---|---|
-| Existing artifact (design doc, test file, migration) | Offer to extend/update it — do not regenerate from scratch |
-| Related module or pattern | Reference it in imports, dependencies, design decisions |
-| Stack confirmed | Skip stack detection — use what the graph shows |
-| Nothing relevant | Proceed with the skill's normal flow unchanged |
+| Stack Config found | Use declared stack/framework/test-runner directly — no further detection needed |
+| Stack Config has compliance domain | Pass that domain to `/compliance` — no auto-detection needed |
+| KG shows existing artifact (design doc, test file) | Offer to extend/update it — do not regenerate from scratch |
+| KG shows related module or pattern | Reference it in imports, dependencies, design decisions |
+| No Stack Config found | Ask the user what stack to use — do not scan marker files |
 
 ---
 
@@ -94,5 +110,5 @@ Use KG Context throughout the skill execution:
 | requirements | Features or modules related to the requested epic/feature |
 | design | Existing design docs (`docs/HLD.md`, `docs/LLD.md`, ADRs), known components |
 | coding | Existing modules, patterns, imports used by related code |
-| test-plan | Existing test files, untested modules, risky areas in the report |
+| qa | Existing test files, untested modules, risky areas in the report |
 | compliance | Sensitive data flows, auth patterns, logging, existing compliance controls |

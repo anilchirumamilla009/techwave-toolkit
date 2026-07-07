@@ -4,31 +4,19 @@
 
 ---
 
-## Step 1 — Detect Stack
+## Step 1 — Identify the Stack
 
-If `$ARGUMENTS` names a stack, resolve via alias table:
+**Stack Config was loaded in Step 0.0. Use it directly.**
 
-| Alias | Reference |
-|---|---|
-| `nodejs`, `node`, `express`, `fastify`, `hapi`, `typescript` | `references/stacks/nodejs.md` |
-| `python`, `fastapi`, `django`, `flask`, `uvicorn` | `references/stacks/python.md` |
-| `java`, `spring`, `springboot`, `quarkus`, `micronaut`, `maven`, `gradle` | `references/stacks/java.md` |
-| `go`, `golang`, `gin`, `echo`, `chi`, `fiber` | `references/stacks/go.md` |
-| `react`, `nextjs`, `next`, `vite`, `cra`, `frontend` | `references/stacks/react.md` |
-| `rust`, `axum`, `actix`, `warp`, `tokio` | `references/stacks/rust.md` |
+If Stack Config was found:
+- **Single-stack**: use the declared section (Frontend or Backend). No further detection needed.
+- **Fullstack**: both sections present — proceed to Contract Agent.
 
-If no argument, detect from marker files in project root:
+If Stack Config was **not** found, ask the user:
 
-| Marker | Stack |
-|---|---|
-| `package.json` + `tsconfig.json` | Node.js (TypeScript) |
-| `package.json` only | Node.js (JavaScript) |
-| `go.mod` | Go |
-| `pom.xml` / `build.gradle` | Java |
-| `pyproject.toml` / `requirements.txt` | Python |
-| `Cargo.toml` | Rust |
-| multiple found | ask which service to scaffold |
-| none found | ask the user |
+> "What stack should I scaffold? (e.g. React + Vite, Node.js + Express, Python + FastAPI, Go + Gin, Rust + Axum, Java + Spring Boot, .NET 8 + ASP.NET Core)"
+
+Use their answer to select the matching scaffold from `references/stacks/`.
 
 ## Step 2 — Confirm Before Writing
 

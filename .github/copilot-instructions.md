@@ -1,6 +1,6 @@
-# techwave-dev
+# tw-dev
 
-This project has the **techwave-dev** plugin installed. It provides AI-assisted skills for every development phase of the SDLC.
+This project has the **tw-dev** plugin installed. It provides AI-assisted skills for every development phase of the SDLC.
 
 ## Available skills
 
@@ -11,8 +11,8 @@ Invoke any skill with `/skill-name`:
 | Orchestrator | `/orchestrator` | Entry point — drives the full dev workflow from a ticket, GitHub issue, or plain text |
 | Requirements | `/requirements` | Writes user stories, acceptance criteria, BDD scenarios |
 | Design | `/design` | Creates HLD and LLD saved to `docs/`, ADRs, tech-stack evaluations |
-| Coding | `/coding [stack]` | Coding Agent → Unit Test Agent → Validator Agent sequential flow |
-| Test Plan | `/test-plan` | Test strategy document + runnable test stubs |
+| Coding | `/coding [stack]` | Contract Agent → UI + Backend Coding Agents → Test Agents → Validator (fullstack), or single-stack flow |
+| QA | `/qa` | E2E scenarios, acceptance mapping, test data strategy, performance plan — layers above what `/coding` generates |
 | Compliance | `/compliance [domain]` | HIPAA, PCI DSS, GDPR, SOC 2 code-level review |
 
 ## Knowledge graph (Step 0)
@@ -30,7 +30,7 @@ This means skills understand your existing codebase — modules, stack, patterns
 /orchestrator PROJ-123         — full workflow from a Jira ticket
 /requirements login feature    — write stories only
 /design create HLD for auth    — design only
-/coding nodejs                 — generate code + tests + validation
-/test-plan UserService         — test plan + stubs
+/coding                        — generate code + unit/integration tests + validation
+/qa login feature              — E2E scenarios, acceptance mapping, test data
 /compliance health             — HIPAA review
 ```

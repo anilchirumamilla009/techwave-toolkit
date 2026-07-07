@@ -1,8 +1,8 @@
-# techwave-toolkit
+# tw-dev
 
-A Claude Code plugin providing AI-assisted skills for the development phases of the SDLC. Tech-stack agnostic — works with Node.js, Python, Go, Java, Rust, React, and more.
+A Claude Code plugin providing AI-assisted skills for the development phases of the SDLC. Tech-stack agnostic — works with Node.js, Python, Go, Java, Rust, .NET, React, and more.
 
-**Version:** 0.5.0 · **License:** MIT · **Author:** Venkata Anil Kumar Chirumamilla
+**Version:** 0.6.0 · **License:** MIT · **Author:** Venkata Anil Kumar Chirumamilla
 
 ---
 
@@ -11,14 +11,16 @@ A Claude Code plugin providing AI-assisted skills for the development phases of 
 - [Overview](#overview)
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
+- [Tech Stack Config](#tech-stack-config)
+- [Knowledge Graph](#knowledge-graph)
 - [Plugin Management](#plugin-management)
 - [Skills Reference](#skills-reference)
-- [Orchestrator — Start Here](#orchestrator--start-here)
-- [Requirements](#requirements)
-- [Design](#design)
-- [Coding](#coding)
-- [Test Plan](#test-plan)
-- [Compliance](#compliance)
+  - [Orchestrator](#orchestrator--start-here)
+  - [Requirements](#requirements)
+  - [Design](#design)
+  - [Coding](#coding)
+  - [QA Strategy](#qa-strategy)
+  - [Compliance](#compliance)
 - [Hooks and Compliance Scanning](#hooks-and-compliance-scanning)
 - [MCP Server Configuration](#mcp-server-configuration)
 - [Plugin Structure](#plugin-structure)
@@ -29,26 +31,26 @@ A Claude Code plugin providing AI-assisted skills for the development phases of 
 
 ## Overview
 
-techwave-toolkit wraps the development phases of the SDLC into a Claude Code plugin. Instead of juggling separate tools, you drive the full dev workflow — from raw requirements through compliance — from a single Claude Code session.
+**tw-dev** wraps the development phases of the SDLC into a Claude Code plugin. Instead of juggling separate tools, you drive the full dev workflow — from raw requirements through compliance — from a single Claude Code session.
 
-**What it does:**
+### What it does
 
 - Converts Jira tickets, Confluence pages, GitHub issues, or plain text into structured requirements
 - Generates architecture diagrams (Mermaid), ADRs, and tech-stack evaluations saved to `docs/`
-- Generates runnable code via a sequential Coding → Unit Test → Validator agent flow
-- Produces test-plan documents plus runnable test stubs for the detected framework
+- Scaffolds fullstack monorepos (frontend + backend) from an OpenAPI contract using a multi-agent flow
+- Generates E2E scenarios, acceptance mapping, test data strategy, and performance plans
 - Reviews code against HIPAA, PCI DSS v4.0, GDPR, and SOC 2 controls
 - Scans every file write for hardcoded credentials and PII in logs via a background hook
 
-**Skill map:**
+### Skill map
 
 | Command | Phase | Description |
 |---|---|---|
-| `/orchestrator` | **Entry point** | Accepts a Jira ticket, Confluence page, GitHub issue, or plain text — drives all dev phases in sequence |
+| `/orchestrator` | Entry point | Accepts a ticket, page, issue, or plain text — drives all dev phases in sequence |
 | `/requirements` | Requirements | User stories, acceptance criteria, BDD scenarios, epic breakdown |
-| `/design` | Architecture | Mermaid diagrams saved to `docs/HLD.md` + `docs/LLD.md`, ADRs, tech-stack evaluation |
-| `/coding [stack]` | Development | Coding Agent → Unit Test Agent → Validator Agent sequential flow |
-| `/test-plan` | Testing | Test strategy document + runnable test stubs |
+| `/design` | Architecture | Mermaid diagrams saved to `docs/`, ADRs, tech-stack evaluation |
+| `/coding` | Development | Single-stack or fullstack (Contract → UI + Backend → Tests → Validator) |
+| `/qa` | QA Strategy | E2E scenarios (Playwright), acceptance mapping, test data, performance plan |
 | `/compliance [domain]` | Compliance | HIPAA, PCI DSS, GDPR, SOC 2 code-level review |
 
 ---
@@ -66,45 +68,96 @@ techwave-toolkit wraps the development phases of the SDLC into a Claude Code plu
 
 This plugin works with both **Claude Code CLI** and **GitHub Copilot CLI**. The skill content is identical — only the install command differs.
 
----
-
 ### Claude Code CLI
 
 ```bash
 # Step 1 — register the GitHub repo as a marketplace
-# Registers as "techwave" in ~/.claude/settings.json
 claude plugin marketplace add anilchirumamilla009/techwave-toolkit
 
 # Step 2 — install the plugin
-claude plugin install techwave-dev@techwave
+claude plugin install tw-dev@techwave
 ```
 
 To update:
 
 ```bash
 claude plugin marketplace update techwave
-claude plugin update techwave-dev
+claude plugin update tw-dev
 ```
-
----
 
 ### GitHub Copilot CLI
 
 ```bash
 # Step 1 — register the GitHub repo as a marketplace
-# Registers as "techwave" in ~/.copilot/settings.json
 copilot plugin marketplace add anilchirumamilla009/techwave-toolkit
 
 # Step 2 — install the plugin
-copilot plugin install techwave-dev@techwave
+copilot plugin install tw-dev@techwave
 ```
 
 To update:
 
 ```bash
 copilot plugin marketplace update techwave
-copilot plugin update techwave-dev
+copilot plugin update tw-dev
 ```
+
+---
+
+## Tech Stack Config
+
+Create a single `tech-stack.md` file in your target project's `.github/` folder (or `.claude/`). Every skill reads it automatically at Step 0 — no repeated stack detection, no questions about your framework.
+
+```
+your-project/
+└── .github/
+    └── tech-stack.md    ← checked first
+```
+
+### Format
+
+```markdown
+# Tech Stack
+
+## Frontend
+- Framework: React 18 + TypeScript
+- Build tool: Vite
+- Test runner: Vitest + React Testing Library
+- Package manager: pnpm
+
+## Backend
+- Language: Node.js (TypeScript)
+- Framework: Express 4
+- Test runner: Jest + Supertest
+- Package manager: pnpm
+
+## Notes
+- Monorepo tool: pnpm workspaces
+- CI: GitHub Actions
+- Compliance domain: hipaa
+```
+
+Plain markdown — no YAML or strict schema required. Add any sections your team needs (Database, Infrastructure, etc.).
+
+### Mode detection for `/coding`
+
+| `tech-stack.md` content | Mode |
+|---|---|
+| Has both `## Frontend` and `## Backend` sections | **Fullstack** — Contract Agent → UI + Backend Agents |
+| Has only one section | **Single-stack** — uses declared stack directly |
+| File not present | Skills ask one plain-English question before proceeding |
+
+### What each skill uses it for
+
+| Skill | How it uses Stack Config |
+|---|---|
+| `/coding` | Reads stack and test runner directly — no file scanning |
+| `/qa` | Picks the right E2E framework and test runner per layer |
+| `/orchestrator` | Populates stack signals and compliance domain in the requirement struct |
+| `/design` | Skips tech-stack-gathering questions — uses declared stack directly |
+| `/compliance` | Reads `Compliance domain:` from Notes — no auto-detection needed |
+
+The `Compliance domain:` note in the `Notes` section (e.g. `hipaa`, `pci`, `gdpr`, `soc2`) tells `/compliance` which standard to check against automatically.
 
 ---
 
@@ -112,46 +165,42 @@ copilot plugin update techwave-dev
 
 Every skill runs a fully automatic **Step 0** before its main logic. No manual setup is needed — invoking any skill for the first time in a project handles everything automatically.
 
-### What happens automatically on first skill invocation
+### What happens on first invocation
 
 ```
-/requirements  (or any skill)
+/coding  (or any skill)
+  │
+  ├─ 0.0  Read .github/tech-stack.md (or .claude/tech-stack.md)
+  │         Found → hold as Stack Config; skip all detection
+  │         Not found → ask user when stack is needed
   │
   ├─ 0.1  Is graphify installed?
-  │         NO  → pip install graphifyy          (installs automatically)
+  │         NO  → pip install graphifyy
   │         YES → continue
   │
   ├─ 0.2  Does graphify-out/GRAPH_REPORT.md exist?
-  │         NO  → graphify .                     (builds the knowledge graph)
-  │              graphify claude install          (wires into Claude Code)
+  │         NO  → graphify .  (builds knowledge graph)
+  │              graphify claude install
   │              adds graphify-out/ to .gitignore
   │         YES → continue
   │
   └─ 0.3  Read graphify-out/GRAPH_REPORT.md
             extracts: modules, stack, existing artifacts relevant to this skill
-            proceeds with full project context — no blind code scanning
+            proceeds with full project context
 ```
 
-From the second invocation onwards, graphify is already installed and the graph already exists — Step 0 takes under a second.
+From the second invocation onwards, graphify is already installed and the graph already exists — Step 0 completes in under a second.
 
 ### What graphify produces
 
 | File | Contents |
 |---|---|
-| `graphify-out/GRAPH_REPORT.md` | Human-readable summary — core modules, key entities, suggested questions. Read by every skill. |
-| `graphify-out/graph.json` | Full NetworkX graph — functions, classes, imports, call edges with confidence tags |
+| `graphify-out/GRAPH_REPORT.md` | Human-readable summary — core modules, key entities. Read by every skill. |
+| `graphify-out/graph.json` | Full NetworkX graph — functions, classes, imports, call edges |
 | `graphify-out/graph.html` | Interactive visualization (open in browser) |
 | `graphify-out/cache/` | Incremental AST cache — rebuilt automatically after each commit |
 
-### Rebuild the graph manually
-
-The graph stays current automatically via the post-commit hook installed by `graphify claude install`. To force a full rebuild at any time:
-
-```bash
-graphify .
-```
-
-Or delete `graphify-out/` and invoke any skill — Step 0 will rebuild it.
+To force a full rebuild at any time: `graphify .`
 
 ---
 
@@ -162,26 +211,26 @@ Commands are identical between the two CLIs — just swap `claude` for `copilot`
 ### Claude Code CLI
 
 ```bash
-claude plugin list                                    # list installed plugins
-claude plugin details techwave-dev                    # show skill details
-claude plugin marketplace update techwave             # fetch latest from GitHub
-claude plugin update techwave-dev                     # apply the update
-claude plugin disable techwave-dev                    # disable without uninstalling
-claude plugin enable techwave-dev                     # re-enable
-claude plugin uninstall techwave-dev                  # remove completely
-claude plugin validate .                              # validate from plugin root
+claude plugin list                          # list installed plugins
+claude plugin details tw-dev               # show skill details
+claude plugin marketplace update techwave  # fetch latest from GitHub
+claude plugin update tw-dev                # apply the update
+claude plugin disable tw-dev               # disable without uninstalling
+claude plugin enable tw-dev                # re-enable
+claude plugin uninstall tw-dev             # remove completely
+claude plugin validate .                   # validate from plugin root
 ```
 
 ### GitHub Copilot CLI
 
 ```bash
 copilot plugin list
-copilot plugin details techwave-dev
+copilot plugin details tw-dev
 copilot plugin marketplace update techwave
-copilot plugin update techwave-dev
-copilot plugin disable techwave-dev
-copilot plugin enable techwave-dev
-copilot plugin uninstall techwave-dev
+copilot plugin update tw-dev
+copilot plugin disable tw-dev
+copilot plugin enable tw-dev
+copilot plugin uninstall tw-dev
 copilot plugin validate .
 ```
 
@@ -211,96 +260,43 @@ The orchestrator is the single entry point for the full SDLC workflow. Give it a
 
 | Format | Example |
 |---|---|
-| Jira ticket ID | `PROJ-123`, `DEV-456` (pattern: `[A-Z]+-\d+`) |
+| Jira ticket ID | `PROJ-123`, `DEV-456` |
 | Confluence URL | `https://*/wiki/spaces/*/pages/*` |
 | Confluence page title (quoted) | `"User Authentication Design"` |
 | GitHub issue URL | `https://github.com/org/repo/issues/42` |
-| GitHub issue shorthand | `#42` (when inside a GitHub-linked project) |
 | Linear ticket | `ENG-123` (requires Linear MCP) |
-| Plain text description | Any feature brief, PRD excerpt, or requirement |
+| Plain text | Any feature brief, PRD excerpt, or requirement |
 | Pasted content | Raw Jira/Confluence/GitHub body pasted into chat |
 
 ### What happens step by step
 
 **Step 1 — Parse the input.**
-The orchestrator detects the input type and either fetches content via MCP (if a matching MCP server is configured) or asks you to paste the content. It normalises the input into a structured requirement:
-
-```
-Title:                <one-line summary>
-Type:                 feature | bug | spike | epic | task
-Domain:               health | finance | eu | general | unknown
-Stack signals:        <any tech mentions — Java, Node.js, React, etc.>
-Acceptance criteria:  <extracted or inferred>
-Out of scope:         <explicitly excluded items>
-```
-
-It then shows you this struct and asks for confirmation before proceeding. A wrong parse wastes all subsequent phases, so this step is never skipped.
+The orchestrator detects the input type and either fetches content via MCP (if a matching MCP server is configured) or asks you to paste the content. It normalises the input into a structured requirement struct and asks for your confirmation before proceeding.
 
 **Step 2 — Detect what already exists.**
 The orchestrator scans the project for existing artefacts (source directories, test files, design docs) and skips phases whose outputs are already present.
 
 **Step 3 — Propose the sequence.**
-Based on what exists, it proposes only the missing phases and asks for your approval. Type `go` to start, or adjust before proceeding.
-
-Full sequence when nothing exists:
+Based on what exists, it proposes only the missing phases:
 
 ```
-Phase 1: /requirements  — user stories + acceptance criteria
-Phase 2: /design        — HLD, LLD, ADR saved to docs/
-Phase 3: /coding        — code, tests, validation (3-agent flow)
-Phase 4: /test-plan     — test strategy + stubs
-Phase 5: /compliance    — domain compliance check
-```
-
-Example partial sequences:
-
-```
-New feature:           /requirements → /design → /coding → /test-plan → /compliance
-Code exists, no tests: /test-plan → /compliance
-Bug ticket:            /requirements (bug story) → /coding → /test-plan
+New feature:           /requirements → /design → /coding → /qa → /compliance
+Code exists, no tests: /qa → /compliance
+Bug ticket:            /requirements (bug story) → /coding → /qa
 ```
 
 **Step 4 — Drive each phase.**
-For each phase the orchestrator:
-1. Announces `Starting Phase N: <skill>`
-2. Invokes the skill with full requirement context (title, type, domain, stack signals)
-3. Shows a brief summary of what was produced
-4. Asks `Continue to Phase N+1? (yes / skip / stop)`
-
-Responding `yes` proceeds, `skip` skips that phase and moves to the next, `stop` ends orchestration.
+For each phase: announces start → invokes the skill with full requirement context → shows a brief summary → asks `Continue to Phase N+1? (yes / skip / stop)`.
 
 **Step 5 — Final summary.**
-After all phases complete (or you type `stop`), the orchestrator prints a completion table:
-
-```
-SDLC Orchestration Complete
-===========================
-Source: <input type + ID/title>
-Requirement: <one-line title>
-
-Completed phases:
-  ✓ Requirements — X user stories, Y acceptance criteria
-  ✓ Design — C4 diagram, 1 ADR
-  ✓ Scaffold — Java/Spring Boot structure
-  ✓ Test Plan — JUnit5 stubs, coverage targets
-  ✓ Compliance — HIPAA: 3 controls applied
-  ✓ CI/CD — GitHub Actions pipeline
-  ✓ Deploy — Helm chart + values.yaml
-
-Skipped: [list any skipped phases]
-
-Next steps:
-  - Review generated files
-  - Re-invoke any skill individually: /requirements, /design, etc.
-```
+Prints a completion table listing completed phases, what was produced, and suggested next steps.
 
 ### Key rules
 
 - The orchestrator never generates artefacts itself — it coordinates skills; they produce outputs.
 - It always confirms the parsed requirement before starting any phase.
 - It always asks `Continue?` between phases — it never skips silently.
-- If an MCP fetch fails (network error, auth, missing field), it falls back to "paste it here" — it never aborts.
-- Context is carried forward: every skill receives the requirement title, domain, and stack signals so output is coherent across phases.
+- Context (title, domain, stack signals) is carried forward to every skill so output is coherent across phases.
 
 ---
 
@@ -316,8 +312,6 @@ Transforms raw ideas, features, or epics into structured, behavior-first require
 /requirements define acceptance criteria for the checkout flow
 /requirements write BDD scenarios for password reset
 /requirements capture requirements for real-time notifications
-/requirements create a product backlog item for two-factor authentication
-/requirements document requirements for the reporting dashboard
 ```
 
 ### What it produces
@@ -325,35 +319,9 @@ Transforms raw ideas, features, or epics into structured, behavior-first require
 1. **Epic statement** (if applicable)
 2. **User stories** in As a / I want / So that format
 3. **Acceptance criteria** — testable Given/When/Then bullets for each story
-4. **BDD scenarios** (optional — included when requested or when the feature has complex branching)
+4. **BDD scenarios** (when the feature has complex branching)
 5. **Technical Notes** — constraints the dev team needs (never implementation choices)
 6. **Out of Scope** — explicit list of what this story does NOT cover
-
-### Output template
-
-```
-## Epic: [Epic Name]
-As a [type of user], I want [goal] so that [benefit].
-
----
-
-### Story 1: [Story Name] [Size: S/M/L/XS]
-
-**As a** [persona]
-**I want** [action or capability]
-**So that** [benefit or outcome]
-
-**Acceptance Criteria:**
-- [ ] Given [context], when [action], then [outcome]
-- [ ] [Edge case or alternate path]
-- [ ] [Non-happy path: what happens on error]
-
-**Out of Scope:**
-- [What this story does NOT cover]
-
-**Technical Notes:** *(optional)*
-- [Constraint, not solution — e.g., "must respond in < 200ms" not "use Redis"]
-```
 
 ### Story sizing
 
@@ -362,16 +330,14 @@ As a [type of user], I want [goal] so that [benefit].
 | XS | Less than 1 day |
 | S | 1–2 days |
 | M | 3–5 days |
-| L | 1–2 weeks — flag as candidate for further breakdown |
+| L | 1–2 weeks — flag for breakdown |
 
 ### Key rules
 
 - Stories describe observable outcomes, not database tables or API calls.
 - Acceptance criteria must be verifiable true/false by a QA engineer.
-- Never write "the system should" — write "the user can" or "the user sees".
-- Implementation details (tech stack, database, framework) are stripped from stories and placed in Technical Notes only.
-- When input is incomplete, the skill drafts requirements immediately using inferences tagged `[Assumed]`, then asks one consolidating question — never a questionnaire upfront.
-- For Jira/Linear format output, the skill maps fields using `references/story-templates.md`.
+- Implementation details go in Technical Notes only — never in story body.
+- When input is incomplete, drafts requirements using `[Assumed]` tags, then asks one consolidating question.
 
 ---
 
@@ -388,253 +354,172 @@ Produces text-based system design artefacts: architecture diagrams, ADRs, tech-s
 /design draw a sequence diagram for the order checkout flow
 /design create an ER diagram for the user management module
 /design design the system for a healthcare data ingestion pipeline
-/design create a high-level architecture diagram for a microservices platform
-/design create a low-level design for the authentication service
 ```
 
 ### Artifact type routing and output location
 
 | User says | Artifact | Saved to |
 |---|---|---|
-| "HLD", "high-level design", "system design" | C4 Context + Container diagrams + narrative | `docs/HLD.md` |
+| "HLD", "high-level design", "system design" | C4 Context + Container + narrative | `docs/HLD.md` |
 | "LLD", "low-level design", "component diagram" | Component / class / sequence + API contracts | `docs/LLD.md` |
 | "sequence diagram", "flow" | Mermaid `sequenceDiagram` | `docs/LLD.md` |
 | "ER diagram", "data model" | Mermaid `erDiagram` | `docs/LLD.md` |
 | "ADR", "architecture decision" | Nygard ADR | `docs/ADR-NNN-<title>.md` |
 | "tech stack", "which technology" | Evaluation matrix + recommendation | inline only |
-| "design the system" (generic) | HLD first, then asks if LLD is needed | `docs/HLD.md` |
-
-All diagrams are text-based Mermaid — renders on GitHub, GitLab, Notion, and most editors.
-
-### Docs folder behavior
-
-The skill confirms the planned document paths with you before writing, then creates `docs/` in the project root if it does not exist and writes each document there. ADR filenames are auto-incremented (`ADR-001`, `ADR-002`, ...).
-
-### ADR format (Nygard)
-
-- **Title** — short imperative phrase
-- **Status** — one of: Proposed, Accepted, Deprecated, Superseded by [ADR-NNN]
-- **Context** — the forces and constraints that led to this decision
-- **Decision** — what was decided
-- **Consequences** — trade-offs and follow-on work (never skipped)
-
-### Tech stack evaluation
-
-Collects team expertise, deployment target, scale requirements, and integration constraints before producing a scoring matrix. Recommendation always follows the matrix — never precedes it.
 
 ### Key rules
 
-- Always write HLD and LLD to `docs/` — never leave design artifacts only in chat.
-- Confirm planned files with the user before writing anything.
-- Diagrams are Mermaid text only — no SVG, no image URLs.
-- "Quick diagram" request → produce diagram inline only, skip the doc write.
+- Always write HLD and LLD to `docs/` — never leave design artifacts in chat only.
+- Confirm planned file paths with the user before writing anything.
+- Diagrams are Mermaid text only — renders on GitHub, Notion, and most editors.
+- ADR filenames are auto-incremented (`ADR-001`, `ADR-002`, ...).
 
 ---
 
 ## Coding
 
-Drives a three-agent sequential flow: Coding Agent → Unit Test Agent → Validator Agent. Each agent runs to completion before the next begins.
+Drives a multi-agent sequential flow from stack detection through validation. The mode is determined automatically from `tech-stack.md`.
 
 ### How to invoke
 
 ```
-/coding nodejs          # Node.js + TypeScript + Express
-/coding python          # Python + FastAPI + Poetry
-/coding go              # Go + Gin
-/coding java            # Java + Spring Boot
-/coding react           # React + Vite + TypeScript
-/coding rust            # Rust + Axum
-/coding                 # Auto-detects stack from existing marker files
+/coding        # reads tech-stack.md — fullstack or single-stack depending on content
 ```
 
-### Supported stacks and recognized aliases
+If no `tech-stack.md` is present, the skill asks one question: what stack to scaffold.
 
-| Stack | Aliases |
-|---|---|
-| Node.js (TypeScript) | `nodejs`, `node`, `express`, `fastify`, `hapi`, `typescript` |
-| Python | `python`, `fastapi`, `django`, `flask`, `uvicorn` |
-| Java | `java`, `spring`, `springboot`, `quarkus`, `micronaut`, `maven`, `gradle` |
-| Go | `go`, `golang`, `gin`, `echo`, `chi`, `fiber` |
-| React | `react`, `nextjs`, `next`, `vite`, `cra`, `frontend` |
-| Rust | `rust`, `axum`, `actix`, `warp`, `tokio` |
+### Supported stacks
 
-### Agent 1 — Coding Agent
+Node.js + TypeScript · Python + FastAPI · Go + Gin · Java + Spring Boot · Rust + Axum · .NET 8 + ASP.NET Core · React + Vite · Next.js · Vue · SvelteKit
 
-Detects or accepts the stack, shows the planned directory tree, and waits for confirmation before writing any files. Generates real, runnable code — no placeholders. Secrets go in `.env.example` only; `.env` is gitignored.
+### Single-stack mode
+
+Triggered when `tech-stack.md` has only one section (Frontend or Backend).
 
 ```
-[Coding Agent] Planning [Stack] structure:
-<directory tree>
-Confirm? (yes / adjust)
+[Coding Agent] → [Unit Test Agent] → [Validator Agent]
 ```
 
-### Agent 2 — Unit Test Agent
+1. **Coding Agent** — reads Stack Config, confirms the planned directory tree, then writes all application code
+2. **Unit Test Agent** — reads the generated code, selects the idiomatic test framework from Stack Config, writes test stubs with coverage targets (90%+ auth/payments, 80%+ APIs)
+3. **Validator Agent** — pass/fail verdict across Correctness, Security, and Test Quality
 
-Reads the generated code, selects the idiomatic test framework for the stack, and writes test files alongside source files. Every test has a failing assertion + `// TODO: implement`. Sets coverage targets by risk level (90%+ for auth/payments, 80%+ for APIs, 60%+ for utilities).
+### Fullstack mode
 
-### Agent 3 — Validator Agent
-
-Reviews code and tests across three dimensions and produces a single verdict:
+Triggered when `tech-stack.md` has both `## Frontend` and `## Backend` sections. Both frontend and backend code are placed under the **same parent repository** as a monorepo.
 
 ```
-[Validator Agent] Review Complete
-==================================
-Correctness : PASS | FAIL
-Security    : PASS | FAIL
-Test Quality: PASS | FAIL
-
-Overall: PASS ✓  |  NEEDS REVISION ✗
-
-Issues (if NEEDS REVISION):
-- [file:line] [HIGH|MED|LOW] <description> — <fix>
+[Contract Agent]
+       │
+       ├─ establishes monorepo structure (frontend/ + backend/ + docs/ + docker-compose.yml)
+       └─ writes docs/openapi.yaml after user confirms the contract
+              │
+   ┌──────────┴──────────┐
+   │                     │
+[UI Coding Agent]   [Backend Coding Agent]
+frontend/           backend/
+       │                     │
+[UI Test Agent]     [Backend Test Agent]
+       └──────────┬──────────┘
+                  │
+          [Validator Agent]
+          (checks both layers + contract conformance)
 ```
+
+**Contract Agent** — proposes the monorepo directory layout, then drafts `openapi.yaml`. Waits for explicit user confirmation before writing any file.
+
+**UI Coding Agent** — reads `openapi.yaml`, writes all frontend code under `frontend/`. Generates a typed API client (one function per `operationId`), components, pages, and routing.
+
+**Backend Coding Agent** — reads `openapi.yaml`, writes all backend code under `backend/`. Generates route handlers for every path in the spec, middleware, and a service layer.
+
+**UI / Backend Test Agents** — each reads their layer's generated code and the Stack Config `Test runner:` line. Generates component tests + API client tests (UI) and route integration tests + service unit tests (Backend).
+
+**Validator Agent** — reviews both layers and checks contract conformance (every `operationId` in the spec must have a backend handler and a frontend client function).
 
 ### Key rules
 
-- No agent writes files until Coding Agent receives user confirmation.
-- Generated code is immediately runnable — no `TODO` in production code.
-- Hardcoded secrets are always HIGH severity in the Validator report.
-- Each agent announces its start and handoff so you can follow the flow.
+- No agent writes any file until it receives explicit user confirmation for its own planning step
+- Three confirmation gates in fullstack mode: monorepo structure → openapi spec → code structure per layer
+- Hardcoded secrets are always HIGH severity in the Validator report
+- Generated code is immediately runnable — no `TODO` in production code paths
 
 ---
 
-## Test Plan
+## QA Strategy
 
-Generates a written test-plan document and runnable test stubs for the detected tech stack and framework.
+Generates the testing layers that sit above unit and integration stubs. If `/coding` has already run, `/qa` detects existing test files and focuses only on what is missing.
 
 ### How to invoke
 
 ```
-/test-plan write a test plan for the user authentication module
-/test-plan generate test stubs for the OrderService class
-/test-plan create a testing strategy for the payments API
-/test-plan what should we test for the notification service
-/test-plan plan e2e tests for the checkout flow
-/test-plan generate integration tests for the database layer
-/test-plan QA plan for the user registration feature
+/qa checkout flow       # E2E scenarios for a specific feature
+/qa login feature       # acceptance scenarios + Playwright stubs
+/qa payments API        # E2E + performance plan for a critical path
+/qa                     # full QA strategy for the current codebase
 ```
 
-### Stack and framework detection
+### What it produces
 
-The skill detects the tech stack from marker files (same logic as `/coding`) and selects the idiomatic test framework:
-
-| Stack | Default framework |
+| Output | Description |
 |---|---|
-| Node.js / TypeScript | Jest |
-| Go | `testing` + `testify` |
-| Java | JUnit 5 + Mockito |
-| Python | pytest |
-| Rust | built-in `#[test]` + `tokio::test` |
-| React | Vitest + React Testing Library |
+| E2E stubs | Playwright `.ts` files — one file per journey group |
+| Acceptance scenarios | Given/When/Then in domain language, mapped from requirements |
+| Test data strategy | Fixtures, factory stubs, seed script outline |
+| Performance plan | k6/Locust/Artillery scenarios + latency/throughput targets |
+| Accessibility checklist | WCAG 2.1 AA automated (axe-core) + manual checks |
+| QA strategy document | Full test pyramid for this feature, CI stage assignment |
 
-### Test plan document structure
+### Division of labour with `/coding`
 
-```
-## Test Plan: [Feature/Service Name]
+| Layer | Generated by |
+|---|---|
+| Unit test stubs | `/coding` — Unit Test Agent or Backend Test Agent |
+| Route integration stubs | `/coding` — Backend Test Agent |
+| Component + API client tests | `/coding` — UI Test Agent |
+| **E2E scenarios (Playwright)** | **`/qa`** |
+| **Acceptance mapping (Given/When/Then)** | **`/qa`** |
+| **Test data strategy** | **`/qa`** |
+| **Performance plan** | **`/qa`** |
+| **Accessibility checklist** | **`/qa`** |
 
-### Scope
-[What is included in testing]
+### E2E journey selection
 
-### Out of Scope
-[What is explicitly excluded and why]
-
-### Test Types
-
-#### Unit Tests
-- [Component/function]: [what is being verified]
-- Coverage target: [X]% for this module
-
-#### Integration Tests
-- [Integration point]: [what is being verified]
-- Dependencies: [list real vs mocked]
-
-#### End-to-End Tests
-- [User flow]: [steps and expected outcomes]
-
-#### Performance Considerations
-- [Any latency or throughput targets]
-
-### CI Integration
-[Which CI stage should run which test type]
-```
-
-### Coverage targets by risk level
-
-| Risk level | Unit | Integration | E2E |
-|---|---|---|---|
-| High (auth, payments, data mutations) | 90%+ | 80%+ | 3–5 critical journeys |
-| Medium (business logic, APIs) | 80%+ | 60%+ | 3–5 critical journeys |
-| Low (UI, utilities) | 60%+ | — | 3–5 critical journeys |
-
-### Test stub example
-
-```javascript
-describe('UserService.createUser', () => {
-  it('should return created user with assigned ID', async () => {
-    // TODO: implement
-    expect(result.id).toBeDefined()
-    expect(result.email).toBe(input.email)
-  })
-
-  it('should throw validation error when email is missing', async () => {
-    // TODO: implement
-    await expect(service.createUser({})).rejects.toThrow('email is required')
-  })
-})
-```
+Always included: authentication, primary value action, payment/subscription flow (if applicable).
+Included when relevant: data creation/deletion, admin or privileged actions, data export/import.
 
 ### Key rules
 
-- Test stubs always have a failing assertion and a `// TODO: implement` comment — empty test bodies are never generated.
-- Test names describe behavior, not implementation: `should return 404 when user not found` not `test getUserById error`.
-- Integration tests clearly state which dependencies are real (real database, real HTTP) vs mocked.
-- If no existing code is found, tests are generated first (TDD approach) — this is noted in the output.
+- Never regenerates unit or integration stubs when `/coding` already produced them
+- E2E test names describe the user's observable outcome — no implementation references
+- Acceptance scenarios are in domain language — no code, no class names
+- Test data factories generate unique data per test run — no shared mutable state
 
 ---
 
 ## Compliance
 
-
-Reviews a codebase or design against domain-specific regulatory requirements and produces a structured pass/fail checklist with concrete code-level remediation guidance.
+Reviews a codebase against domain-specific regulatory requirements and produces a structured pass/fail checklist with code-level remediation guidance.
 
 ### How to invoke
 
 ```
-/compliance health        # HIPAA technical safeguards review
-/compliance hipaa         # alias for health
-/compliance healthcare    # alias for health
-/compliance finance       # PCI DSS v4.0 code controls
-/compliance pci           # alias for finance
-/compliance payment       # alias for finance
-/compliance eu            # GDPR (consent, erasure, portability)
-/compliance gdpr          # alias for eu
-/compliance privacy       # alias for eu
-/compliance soc2          # SOC 2 CC6/7/8 controls
-/compliance soc           # alias for soc2
-/compliance               # Auto-detects domain from codebase signals
+/compliance health      # HIPAA technical safeguards review
+/compliance finance     # PCI DSS v4.0 code controls
+/compliance eu          # GDPR consent, erasure, portability
+/compliance soc2        # SOC 2 CC6/7/8 controls
+/compliance             # auto-detects domain from codebase signals
 ```
 
 ### Domain routing
 
-| Arguments | Standard | Reference loaded |
+| Arguments | Standard | Reference |
 |---|---|---|
-| `health`, `hipaa`, `healthcare`, `phi`, `medical` | HIPAA | `references/hipaa.md` |
+| `health`, `hipaa`, `healthcare`, `phi`, `medical` | HIPAA 45 CFR 164.312 | `references/hipaa.md` |
 | `finance`, `pci`, `pci-dss`, `payment`, `fintech`, `card` | PCI DSS v4.0 | `references/pci-dss.md` |
 | `eu`, `gdpr`, `privacy`, `europe`, `personal-data` | GDPR | `references/gdpr.md` |
 | `general`, `soc2`, `soc`, `cloud`, `startup`, `saas` | SOC 2 | `references/soc2.md` |
 
-### Auto-detection (when no argument is given)
-
-The skill greps the codebase for domain signals in `.py`, `.ts`, `.js`, `.java`, and `.go` files:
-
-| Signals found | Suggested domain |
-|---|---|
-| `hl7`, `fhir`, `patient`, `phi`, `hipaa`, `dicom`, `medical`, `clinical` | `health` |
-| `card`, `pan`, `cvv`, `pci`, `stripe`, `braintree`, `payment`, `transaction`, `billing` | `finance` |
-| `gdpr`, `consent`, `personal_data`, `erasure`, `right_to`, `data_subject`, `lawful_basis` | `eu` |
-| No signals found | `soc2` (most general, applies to any SaaS) |
-
-If signals from multiple domains are found, you are asked which to prioritize.
+If `Compliance domain:` is declared in `tech-stack.md` Notes, that domain is used directly — no auto-detection needed.
 
 ### Compliance report structure
 
@@ -642,106 +527,60 @@ If signals from multiple domains are found, you are asked which to prioritize.
 ## Compliance Review: [Domain] ([Standard])
 
 ### Summary
-- Total controls reviewed: N
-- Passing: N ✓
-- Failing: N ✗
-- Not Applicable: N —
-- Requires Manual Verification: N ⚠
+  Total controls reviewed: N  |  Passing: N ✓  |  Failing: N ✗
 
 ### Control Checklist
 
-#### [Control Category]
-
 | Control | Status | Evidence / Location |
 |---|---|---|
-| [Control name] | ✓ Pass   | [file:line or "config"] |
-| [Control name] | ✗ Fail   | [what was found] |
-| [Control name] | — N/A    | [why not applicable] |
-| [Control name] | ⚠ Manual | [needs human verification] |
+| Encrypt data at rest | ✓ Pass   | src/db/config.ts:42 |
+| No hardcoded credentials | ✗ Fail   | src/auth/service.ts:17 |
+| MFA for admin access | ⚠ Manual | needs runtime verification |
 
 ### Remediation Guidance
 
-#### [Failing Control 1]
-**Issue:** [What is wrong and why it violates the regulation]
-**Fix:** [Specific code pattern — actual before/after code, not just description]
-**Effort:** Low / Medium / High
-
-### Non-Technical Controls Required
-[Controls that require policies, training, or physical security — cannot be satisfied by code alone]
-
-### Remaining Gaps
-[Controls that are partially addressed or unclear — need further investigation]
+#### [Failing Control]
+Issue: [what is wrong and why it violates the standard]
+Fix:   [specific before/after code pattern]
+Effort: Low / Medium / High
 ```
-
-### What the skill reads in the codebase
-
-- Authentication and authorization implementation
-- Data storage and encryption patterns
-- Logging statements (looks for PII exposure)
-- API endpoints that handle sensitive data
-- Configuration files for secrets management
-- Data retention or deletion mechanisms
-
-For large codebases it focuses on the highest-risk areas first: authentication, data storage, logging, and external API calls.
 
 ### Key rules
 
-- A control is only marked Pass when specific code evidence (file and approximate line) is cited.
-- Controls requiring runtime or infrastructure verification are marked Manual, not Pass.
-- All findings are framed as engineering recommendations — never legal advice.
+- A control is only marked Pass when specific code evidence (file and line) is cited.
+- Controls requiring runtime or infrastructure verification are marked Manual — not Pass.
+- All findings are engineering recommendations — never legal advice.
 
 ---
 
 ## Hooks and Compliance Scanning
 
-The plugin registers a `PostToolUse` hook that runs automatically after every `Write`, `Edit`, or `MultiEdit` tool call. The hook scans the modified file for security and compliance issues before Claude Code proceeds.
+The plugin registers a `PostToolUse` hook that runs automatically after every file write. The hook scans the modified file for security and compliance issues.
 
 ### What the hook scans for
 
-**Pattern 1 — Hardcoded credentials in assignments:**
-
-Matches patterns such as:
-```
-password = "mysecret"
-api_key: "abc123xyz"
-secret = 'my-token-value'
-access_token = "Bearer abc..."
-```
-
-The pattern matches any credential variable name followed by a quoted string of 4 or more characters.
-
-**Pattern 2 — PII passed directly to logging calls:**
-
-Matches patterns such as:
-```javascript
-console.log(user.ssn)
-logger.info(`Patient ID: ${patient_id}`)
-print(f"Card: {credit_card}")
-logging.debug(f"DOB: {date_of_birth}")
-```
-
-PII field names checked: `ssn`, `social_security`, `credit_card`, `password`, `phone_number`, `date_of_birth`, `patient_id`.
-
-**Pattern 3 — Embedded cloud access keys:**
-
-AWS access key IDs in the format `AKIA` followed by 16 uppercase alphanumeric characters.
+| Pattern | Example |
+|---|---|
+| Hardcoded credentials | `password = "mysecret"`, `api_key: "abc123"` |
+| PII passed to logging | `console.log(user.ssn)`, `print(f"DOB: {date_of_birth}")` |
+| Embedded cloud access keys | AWS `AKIA...` format key IDs |
 
 ### Hook behavior
 
 | Condition | Behavior |
 |---|---|
-| File is clean | Exits silently (exit 0) — no output |
-| Issue detected | Emits a warning to stderr, exits with code 1 — warning surfaces in Claude Code output |
+| File is clean | Exits silently (exit 0) |
+| Issue detected | Emits a warning to stderr, exits with code 1 |
 | Binary file | Skipped automatically |
-| File larger than 500 KB | Skipped to stay within the 5-second hook timeout |
-| `jq` not installed | Falls back to reading file path from `CLAUDE_TOOL_FILE_PATH` environment variable |
+| File larger than 500 KB | Skipped (stays within 5-second hook timeout) |
+| `jq` not installed | Falls back to `CLAUDE_TOOL_FILE_PATH` env variable |
 
 ### Example warning output
 
 ```
-[techwave-dev] WARNING: Possible hardcoded credential detected in src/config.ts. Use environment variables or a secrets manager instead.
-[techwave-dev] WARNING: Possible PII in log statement detected in src/service/user.ts. Remove PII from logs or use pseudonymization.
-[techwave-dev] WARNING: Possible AWS Access Key ID detected in scripts/deploy.sh. Revoke and rotate this key immediately.
+[tw-dev] WARNING: Possible hardcoded credential detected in src/config.ts. Use environment variables or a secrets manager instead.
+[tw-dev] WARNING: Possible PII in log statement detected in src/service/user.ts. Remove PII from logs or use pseudonymization.
+[tw-dev] WARNING: Possible AWS Access Key ID detected in scripts/deploy.sh. Revoke and rotate this key immediately.
 ```
 
 ---
@@ -756,18 +595,11 @@ The `/orchestrator` skill auto-fetches ticket and page content when a matching M
 claude mcp add --transport http jira https://your-jira-mcp-url
 ```
 
-The orchestrator looks for any of: `mcp__jira__getIssue`, `mcp__jira__get_issue`, `mcp__jira__fetchTicket`, `mcp__jira__getTicket`.
-
 ### Confluence
 
 ```bash
 claude mcp add --transport http confluence https://your-confluence-mcp-url
 ```
-
-The orchestrator looks for any of: `mcp__confluence__getPage`, `mcp__confluence__get_page`, `mcp__confluence__fetchPage`.
-
-- Input is a Confluence URL → page ID is extracted from the URL.
-- Input is a quoted page title → search runs and the top result is used.
 
 ### GitHub
 
@@ -775,25 +607,13 @@ The orchestrator looks for any of: `mcp__confluence__getPage`, `mcp__confluence_
 claude mcp add --transport http github https://api.githubcopilot.com/mcp/v1
 ```
 
-The orchestrator looks for any of: `mcp__github__getIssue`, `mcp__github__get_issue`.
-
 ### Linear
 
 ```bash
 claude mcp add --transport http linear https://your-linear-mcp-url
 ```
 
-The orchestrator looks for any of: `mcp__linear__getIssue`, `mcp__linear__get_issue`.
-
-### Fallback when no MCP server is found
-
-```
-No Jira MCP detected. Either:
-  1. Paste the ticket content here, or
-  2. Add a Jira MCP server: claude mcp add --transport http jira https://your-jira-mcp-url
-```
-
-The orchestrator never aborts — it always provides a paste fallback.
+The orchestrator tries multiple tool name variants for each source (e.g. `mcp__jira__getIssue`, `mcp__jira__get_issue`). If no MCP is detected, it always provides a paste fallback — it never aborts.
 
 ---
 
@@ -802,73 +622,81 @@ The orchestrator never aborts — it always provides a paste fallback.
 ```
 techwave-toolkit/
 ├── .claude-plugin/
-│   └── plugin.json                   # Plugin manifest (name, version, author, license)
-├── skills/                            # One directory per skill
+│   ├── plugin.json                     # Plugin manifest (name: tw-dev, version, author)
+│   └── marketplace.json                # Marketplace listing
+├── .github/
+│   └── copilot-instructions.md         # GitHub Copilot CLI context
+├── skills/
 │   ├── shared/
-│   │   └── knowledge-graph.md        # Step 0 KG protocol shared by all skills
+│   │   └── knowledge-graph.md          # Step 0 protocol shared by all skills
 │   ├── orchestrator/
-│   │   ├── SKILL.md                   # Entry point — coordinates all dev skills
+│   │   ├── SKILL.md
 │   │   └── references/
-│   │       └── mcp-sources.md         # Full list of known MCP tool signatures
+│   │       └── mcp-sources.md          # Known MCP tool name variants per source
 │   ├── requirements/
 │   │   ├── SKILL.md
 │   │   └── references/
-│   │       ├── story-templates.md     # User story and Jira/Linear field templates
-│   │       └── bdd-patterns.md        # Idiomatic Given/When/Then patterns
+│   │       ├── story-templates.md      # User story + Jira/Linear field templates
+│   │       └── bdd-patterns.md         # Idiomatic Given/When/Then patterns by domain
 │   ├── design/
 │   │   ├── SKILL.md
 │   │   └── references/
-│   │       ├── adr-template.md        # Nygard ADR format
-│   │       ├── diagram-formats.md     # Mermaid syntax starters per diagram type
-│   │       └── tech-stack-evaluation.md  # Scoring matrix and evaluation criteria
+│   │       ├── adr-template.md         # Nygard ADR format with worked examples
+│   │       ├── diagram-formats.md      # Mermaid syntax starters per diagram type
+│   │       └── tech-stack-evaluation.md # Scoring matrix — backend, DB, frontend, deploy
 │   ├── coding/
-│   │   ├── SKILL.md                   # Thin orchestrator: Coding → Test → Validator
+│   │   ├── SKILL.md                    # Mode detection + agent execution order
 │   │   ├── agents/
-│   │   │   ├── coding-agent.md        # Stack detection, structure confirm, code generation
-│   │   │   ├── test-agent.md          # Test framework selection, stub generation
-│   │   │   └── validator-agent.md     # Correctness / Security / Test Quality verdict
+│   │   │   ├── coding-agent.md         # Single-stack: reads Stack Config, writes code
+│   │   │   ├── test-agent.md           # Single-stack: writes unit test stubs
+│   │   │   ├── contract-agent.md       # Fullstack: proposes monorepo structure + openapi.yaml
+│   │   │   ├── ui-coding-agent.md      # Fullstack: generates frontend/ from openapi.yaml
+│   │   │   ├── backend-coding-agent.md # Fullstack: generates backend/ from openapi.yaml
+│   │   │   ├── ui-test-agent.md        # Fullstack: component + API client tests
+│   │   │   ├── backend-test-agent.md   # Fullstack: route integration + service unit tests
+│   │   │   └── validator-agent.md      # Both modes: correctness / security / test quality verdict
 │   │   └── references/
-│   │       ├── detection.md           # Stack detection logic
 │   │       └── stacks/
-│   │           ├── nodejs.md          # Node.js + TypeScript + Express boilerplate
-│   │           ├── python.md          # Python + FastAPI + Poetry boilerplate
-│   │           ├── go.md              # Go + Gin boilerplate
-│   │           ├── java.md            # Java + Spring Boot boilerplate
-│   │           ├── react.md           # React + Vite + TypeScript boilerplate
-│   │           └── rust.md            # Rust + Axum boilerplate
-│   ├── test-plan/
+│   │           ├── nodejs.md           # Node.js + TypeScript + Express scaffold
+│   │           ├── python.md           # Python + FastAPI + Poetry scaffold
+│   │           ├── go.md               # Go + Gin scaffold
+│   │           ├── java.md             # Java + Spring Boot scaffold
+│   │           ├── react.md            # React + Vite + TypeScript scaffold
+│   │           ├── rust.md             # Rust + Axum scaffold
+│   │           └── dotnet.md           # .NET 8 + ASP.NET Core Web API scaffold
+│   ├── qa/
 │   │   ├── SKILL.md
 │   │   └── references/
-│   │       ├── frameworks.md          # Test framework selection per stack
-│   │       └── test-types.md          # Unit / integration / E2E patterns
+│   │       ├── frameworks.md           # Playwright config, k6 stubs, axe-core integration
+│   │       └── test-types.md           # Testing pyramid ownership, E2E patterns, CI assignment
 │   └── compliance/
 │       ├── SKILL.md
 │       └── references/
-│           ├── hipaa.md               # HIPAA technical safeguards checklist
-│           ├── pci-dss.md             # PCI DSS v4.0 code controls
-│           ├── gdpr.md                # GDPR consent, erasure, portability controls
-│           └── soc2.md                # SOC 2 CC6/7/8 controls
-├── scripts/
-│   ├── setup-kg.sh                   # Install graphify (pip install graphifyy) + build graph
-│   ├── query-kg.sh                   # Query graphify-out/graph.json for context
-│   └── build-graph.py                # Fallback builder (used only when pip is unavailable)
-└── hooks/
-    ├── hooks.json                     # Registers PostToolUse compliance-scan hook
-    └── compliance-scan.sh             # Scans file writes for hardcoded secrets and PII in logs
+│           ├── hipaa.md                # HIPAA 45 CFR 164.312 code controls
+│           ├── pci-dss.md              # PCI DSS v4.0 code controls
+│           ├── gdpr.md                 # GDPR consent, erasure, portability controls
+│           └── soc2.md                 # SOC 2 CC6/7/8 controls
+├── hooks/
+│   ├── hooks.json                      # Registers PostToolUse compliance-scan hook
+│   └── compliance-scan.sh              # Scans file writes for hardcoded secrets + PII in logs
+└── scripts/
+    ├── setup-kg.sh
+    ├── query-kg.sh
+    └── build-graph.py
 ```
 
 ---
 
 ## How Skills Work
 
-Each skill is a `SKILL.md` file with a YAML frontmatter block. The same file works for both CLIs — each reads only the fields it understands and ignores the rest:
+Each skill is a `SKILL.md` file with a YAML frontmatter block. The same file works for both CLIs:
 
 ```yaml
 ---
 name: coding
 description: <trigger phrases>
 version: 0.3.0
-disable-model-invocation: true   # Claude Code: prevents the model auto-invoking this skill
+disable-model-invocation: true   # Claude Code: prevents auto-invocation
 user-invocable: true             # Copilot CLI: enables /coding slash command
 ---
 ```
@@ -885,26 +713,22 @@ user-invocable: true             # Copilot CLI: enables /coding slash command
 
 Every skill follows this order regardless of which CLI is used:
 
-1. **Step 0** — build and read the knowledge graph (fully automatic — installs graphify if needed, builds graph if missing, reads `graphify-out/GRAPH_REPORT.md` for project context)
-2. **Skill logic** — generates output informed by real project knowledge, not blind scanning
+1. **Step 0** — read `tech-stack.md` (if present), install graphify, build graph, read `GRAPH_REPORT.md`
+2. **Skill logic** — generates output informed by real project knowledge
 
 ### Progressive disclosure
 
-Skills use a two-layer pattern to keep context cost low:
-
-1. **`SKILL.md`** — core instructions, always loaded when the skill is invoked
-2. **`references/*.md`** — dense domain knowledge (templates, code patterns, checklists), loaded on-demand only when needed
+1. **`SKILL.md`** — core instructions, always loaded on invocation
+2. **`references/*.md`** — dense domain knowledge (templates, code patterns, checklists), loaded on-demand
 
 ### Hooks
 
-Both CLIs fire a compliance-scan hook after every file write:
+Both CLIs fire the compliance-scan hook after every file write:
 
 | File | Used by |
 |---|---|
 | `hooks/hooks.json` | Claude Code |
 | `hooks/copilot-hooks.json` | GitHub Copilot CLI |
-
-The same `hooks/compliance-scan.sh` script runs for both — it scans written files for hardcoded credentials and PII in logs.
 
 ---
 
@@ -921,8 +745,7 @@ The same `hooks/compliance-scan.sh` script runs for both — it scans written fi
 - [ ] `description` field has 8+ distinct trigger phrases covering common user phrasings
 - [ ] `SKILL.md` has a clear, numbered step-by-step process section
 - [ ] File-writing skills have `disable-model-invocation: true` in frontmatter
-- [ ] Parameterized skills have a complete routing table for all valid `$ARGUMENTS` values
-- [ ] Reference files contain concrete examples (templates, full code blocks, patterns) — not prose summaries
+- [ ] Reference files contain concrete examples — not prose summaries
 - [ ] The skill asks the user rather than guessing when context is ambiguous
 - [ ] `claude plugin validate .` passes before submitting
 

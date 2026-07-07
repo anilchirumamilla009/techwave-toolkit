@@ -33,6 +33,9 @@ You do not generate artifacts yourself. You coordinate: parse the input, detect 
 
 **Complete all sub-steps before Step 1. Use Bash and Read tools directly — do not ask the user to run anything.**
 
+**0.0 Read Stack Config (do this first)**
+Use the Read tool: try `.github/tech-stack.md`, then `.claude/tech-stack.md`. If found, hold as **Stack Config** — populate the requirement struct's Stack signals and Domain fields from it in Step 2; skip marker-file stack detection.
+
 **0.1 Install graphify if missing**
 ```bash
 command -v graphify || pip install graphifyy || pip3 install graphifyy
@@ -137,9 +140,11 @@ Before proposing a sequence, scan the project to avoid re-doing work:
 Check for:
   src/ or app/ or lib/  → some code already exists
   *Test*.java / *.test.ts / test_*.py  → tests exist
-  pom.xml / package.json / go.mod  → stack is known
+  pom.xml / package.json / go.mod  → stack is known (skip if Stack Config already loaded)
   docs/HLD.md / docs/LLD.md / ADR-*.md  → design docs exist
 ```
+
+**If Stack Config was loaded in Step 0.0:** stack and framework are already known — populate the requirement struct's `Stack signals` field from Stack Config directly. If Stack Config declares a `Compliance domain`, populate the `Domain` field too. Skip the marker-file stack check above.
 
 ---
 
@@ -152,15 +157,15 @@ Based on what exists, propose only the phases that are missing:
 Phase 1: /requirements  — user stories + acceptance criteria
 Phase 2: /design        — HLD, LLD, ADR saved to docs/
 Phase 3: /coding        — code, tests, validation (3-agent flow)
-Phase 4: /test-plan     — test strategy + stubs
+Phase 4: /qa     — test strategy + stubs
 Phase 5: /compliance    — domain compliance check
 ```
 
 **Partial sequences (examples):**
 ```
-New feature:           /requirements → /design → /coding → /test-plan → /compliance
-Code exists, no tests: /test-plan → /compliance
-Bug ticket:            /requirements (bug story) → /coding → /test-plan
+New feature:           /requirements → /design → /coding → /qa → /compliance
+Code exists, no tests: /qa → /compliance
+Bug ticket:            /requirements (bug story) → /coding → /qa
 ```
 
 Show the user: "Proposed sequence: [list phases]. Type 'go' to start, or adjust."

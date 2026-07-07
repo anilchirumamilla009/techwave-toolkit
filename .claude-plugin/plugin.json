@@ -1,7 +1,7 @@
 {
-  "name": "techwave-dev",
-  "version": "0.5.0",
-  "description": "Dev-phase SDLC skills: orchestrate, requirements, design, coding (3-agent flow), test planning, and compliance — tech-stack agnostic",
+  "name": "tw-dev",
+  "version": "0.6.0",
+  "description": "Dev-phase SDLC skills: orchestrate, requirements, design, fullstack coding with OpenAPI contract, QA strategy (E2E/acceptance/performance), and compliance — tech-stack agnostic",
   "author": {
     "name": "Venkata Anil Kumar Chirumamilla",
     "email": "anil.chirumamilla@techwave.com"

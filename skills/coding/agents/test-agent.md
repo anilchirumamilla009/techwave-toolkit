@@ -13,16 +13,16 @@ Read all files written by the Coding Agent. Identify:
 
 ## Step 2 — Select Framework
 
-| Stack | Framework |
-|---|---|
-| Node.js / TypeScript | Jest |
-| Go | `testing` + `testify` |
-| Java | JUnit 5 + Mockito |
-| Python | pytest |
-| Rust | built-in `#[test]` + `tokio::test` |
-| React | Vitest + React Testing Library |
+Read the `Test runner:` line from Stack Config (loaded in Step 0.0). Use exactly what is declared there.
 
-Load `references/frameworks.md` for idiomatic import syntax and assertion styles.
+If Stack Config is absent, derive from the stack name the user provided in Step 1:
+- Node.js / TypeScript → Jest
+- Go → `testing` + `testify`
+- Java → JUnit 5 + Mockito
+- Python → pytest
+- Rust → built-in `#[test]` + `tokio::test`
+- React → Vitest + React Testing Library
+- .NET → xUnit + `WebApplicationFactory<Program>`
 
 ## Step 3 — Write Test Files
 
