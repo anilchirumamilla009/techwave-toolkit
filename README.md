@@ -9,11 +9,14 @@ A Claude Code plugin providing AI-assisted skills for the development phases of 
 ## Table of Contents
 
 - [Overview](#overview)
-- [Prerequisites](#prerequisites)
-- [Installation](#installation)
+- [Setup](#setup)
+  - [Prerequisites](#prerequisites)
+  - [Install](#install)
+  - [Update](#update)
+  - [Manage](#manage)
+  - [Troubleshoot](#troubleshoot)
 - [Tech Stack Config](#tech-stack-config)
 - [Knowledge Graph](#knowledge-graph)
-- [Plugin Management](#plugin-management)
 - [Skills Reference](#skills-reference)
   - [Orchestrator](#orchestrator--start-here)
   - [Requirements](#requirements)
@@ -55,51 +58,118 @@ A Claude Code plugin providing AI-assisted skills for the development phases of 
 
 ---
 
-## Prerequisites
+## Setup
 
-- **bash** available in `PATH` — required by the compliance-scan hook
-- **Python + pip** — required by Step 0 to install graphify (`pip install graphifyy`)
-- **jq** (optional but recommended) — used by the hook to parse file paths from tool events
-- Either **Claude Code CLI** or **GitHub Copilot CLI** (or both)
+Everything you need to install, update, manage, and troubleshoot the plugin in one place. Commands are identical between the two CLIs — swap `claude` for `copilot` where shown.
 
 ---
 
-## Installation
+### Prerequisites
 
-This plugin works with both **Claude Code CLI** and **GitHub Copilot CLI**. The skill content is identical — only the install command differs.
+| Requirement | Why |
+|---|---|
+| **bash** in `PATH` | Required by the compliance-scan hook |
+| **Python + pip** | Step 0 installs graphify automatically (`pip install graphifyy`) |
+| **jq** *(optional)* | Used by the hook to parse file paths from tool events; falls back gracefully if absent |
+| **Claude Code CLI** or **GitHub Copilot CLI** | At least one required; both supported simultaneously |
 
-### Claude Code CLI
+---
+
+### Install
+
+**Claude Code CLI**
 
 ```bash
-# Step 1 — register the GitHub repo as a marketplace
+# 1. Register the GitHub repo as a marketplace (one-time, saved to ~/.claude/settings.json)
 claude plugin marketplace add anilchirumamilla009/techwave-toolkit
 
-# Step 2 — install the plugin
+# 2. Install the plugin
 claude plugin install tw-dev@techwave
 ```
 
-To update:
+**GitHub Copilot CLI**
 
 ```bash
-claude plugin marketplace update techwave
-claude plugin update tw-dev
-```
-
-### GitHub Copilot CLI
-
-```bash
-# Step 1 — register the GitHub repo as a marketplace
+# 1. Register the GitHub repo as a marketplace
 copilot plugin marketplace add anilchirumamilla009/techwave-toolkit
 
-# Step 2 — install the plugin
+# 2. Install the plugin
 copilot plugin install tw-dev@techwave
 ```
 
-To update:
+> **Marketplace key:** The marketplace is registered under the key `techwave` (not the repo or plugin name). This key is what `@techwave` refers to in install commands.
+
+---
+
+### Update
 
 ```bash
+# Fetch the latest plugin list from GitHub, then apply the update
+claude plugin marketplace update techwave
+claude plugin update tw-dev
+
+# Copilot CLI — same sequence
 copilot plugin marketplace update techwave
 copilot plugin update tw-dev
+```
+
+---
+
+### Manage
+
+```bash
+claude plugin list                          # list all installed plugins
+claude plugin details tw-dev               # show version, skills, and status
+claude plugin disable tw-dev               # disable without uninstalling
+claude plugin enable tw-dev                # re-enable a disabled plugin
+claude plugin uninstall tw-dev             # remove completely
+claude plugin validate .                   # validate plugin structure (run from plugin root)
+```
+
+---
+
+### Troubleshoot
+
+#### Plugin not found after rename
+
+If you installed an older version of this plugin (previously named `techwave-dev`) and the install or update fails with:
+
+```
+Plugin "tw-dev" not found in marketplace "techwave". Your local copy may be out of date.
+```
+
+Your local marketplace cache still lists the old name. Fix:
+
+```bash
+# 1. Uninstall the old plugin (skip if not installed)
+claude plugin uninstall techwave-dev
+
+# 2. Refresh the local cache from GitHub
+claude plugin marketplace update techwave
+
+# 3. Install under the new name
+claude plugin install tw-dev@techwave
+```
+
+#### Marketplace not registered
+
+If you see `Plugin "techwave" not found in any configured marketplace`, the marketplace has not been registered yet. Run the one-time registration first:
+
+```bash
+claude plugin marketplace add anilchirumamilla009/techwave-toolkit
+claude plugin install tw-dev@techwave
+```
+
+#### graphify install fails
+
+If Step 0 fails to install graphify (e.g. `pip` not in `PATH`):
+
+```bash
+# Try pip3 explicitly
+pip3 install graphifyy
+
+# Or install into a virtualenv and activate it before using Claude Code
+python3 -m venv .venv && source .venv/bin/activate && pip install graphifyy
 ```
 
 ---
@@ -201,38 +271,6 @@ From the second invocation onwards, graphify is already installed and the graph 
 | `graphify-out/cache/` | Incremental AST cache — rebuilt automatically after each commit |
 
 To force a full rebuild at any time: `graphify .`
-
----
-
-## Plugin Management
-
-Commands are identical between the two CLIs — just swap `claude` for `copilot`.
-
-### Claude Code CLI
-
-```bash
-claude plugin list                          # list installed plugins
-claude plugin details tw-dev               # show skill details
-claude plugin marketplace update techwave  # fetch latest from GitHub
-claude plugin update tw-dev                # apply the update
-claude plugin disable tw-dev               # disable without uninstalling
-claude plugin enable tw-dev                # re-enable
-claude plugin uninstall tw-dev             # remove completely
-claude plugin validate .                   # validate from plugin root
-```
-
-### GitHub Copilot CLI
-
-```bash
-copilot plugin list
-copilot plugin details tw-dev
-copilot plugin marketplace update techwave
-copilot plugin update tw-dev
-copilot plugin disable tw-dev
-copilot plugin enable tw-dev
-copilot plugin uninstall tw-dev
-copilot plugin validate .
-```
 
 ---
 
