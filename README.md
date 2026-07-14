@@ -1,8 +1,8 @@
 # tw-dev
 
-A Claude Code plugin providing AI-assisted skills for the development phases of the SDLC. Tech-stack agnostic — works with Node.js, Python, Go, Java, Rust, .NET, React, and more.
+A Claude Code plugin providing AI-assisted skills for the development phases of the SDLC. Works with any kind of development — web apps, API services, CLI tools, libraries, mobile and desktop apps, data pipelines, ML projects, infrastructure-as-code — and any stack: Node.js, Python, Go, Java, Rust, .NET, React, Swift, Kotlin, Flutter, and beyond.
 
-**Version:** 0.6.0 · **License:** MIT · **Author:** Venkata Anil Kumar Chirumamilla
+**Version:** 0.7.0 · **License:** MIT · **Author:** Venkata Anil Kumar Chirumamilla
 
 ---
 
@@ -28,6 +28,7 @@ A Claude Code plugin providing AI-assisted skills for the development phases of 
 - [MCP Server Configuration](#mcp-server-configuration)
 - [Plugin Structure](#plugin-structure)
 - [How Skills Work](#how-skills-work)
+- [Token Efficiency](#token-efficiency)
 - [Contributing](#contributing)
 
 ---
@@ -40,8 +41,8 @@ A Claude Code plugin providing AI-assisted skills for the development phases of 
 
 - Converts Jira tickets, Confluence pages, GitHub issues, or plain text into structured requirements
 - Generates architecture diagrams (Mermaid), ADRs, and tech-stack evaluations saved to `docs/`
-- Scaffolds fullstack monorepos (frontend + backend) from an OpenAPI contract using a multi-agent flow
-- Generates E2E scenarios, acceptance mapping, test data strategy, and performance plans
+- Scaffolds any project type via a multi-agent flow — single component (service, CLI, library, pipeline, mobile app) or multi-component monorepos built from an interface contract (OpenAPI, GraphQL, gRPC, AsyncAPI, or a plain interface doc)
+- Generates E2E scenarios in the framework that fits the project type (Playwright, Maestro, bats, data-quality suites, ...), acceptance mapping, test data strategy, and performance plans
 - Reviews code against HIPAA, PCI DSS v4.0, GDPR, and SOC 2 controls
 - Scans every file write for hardcoded credentials and PII in logs via a background hook
 
@@ -52,8 +53,8 @@ A Claude Code plugin providing AI-assisted skills for the development phases of 
 | `/orchestrator` | Entry point | Accepts a ticket, page, issue, or plain text — drives all dev phases in sequence |
 | `/requirements` | Requirements | User stories, acceptance criteria, BDD scenarios, epic breakdown |
 | `/design` | Architecture | Mermaid diagrams saved to `docs/`, ADRs, tech-stack evaluation |
-| `/coding` | Development | Single-stack or fullstack (Contract → UI + Backend → Tests → Validator) |
-| `/qa` | QA Strategy | E2E scenarios (Playwright), acceptance mapping, test data, performance plan |
+| `/coding` | Development | Any project type — single-component, fullstack web, or multi-component with an interface contract |
+| `/qa` | QA Strategy | E2E scenarios in the project type's framework, acceptance mapping, test data, performance plan |
 | `/compliance [domain]` | Compliance | HIPAA, PCI DSS, GDPR, SOC 2 code-level review |
 
 ---
@@ -94,7 +95,7 @@ claude plugin install tw-dev@techwave
 copilot plugin marketplace add anilchirumamilla009/techwave-toolkit
 
 # 2. Install the plugin
-copilot plugin install tw-dev@techwave
+copilot plugin install tw-dev@tw-dev
 ```
 
 > **Marketplace key:** The marketplace is registered under the key `techwave` (not the repo or plugin name). This key is what `@techwave` refers to in install commands.
@@ -186,6 +187,8 @@ your-project/
 
 ### Format
 
+Each `## <Section>` heading (other than `## Notes`) declares one **component** of your project. Use whatever component names fit — `Frontend`, `Backend`, `Mobile`, `CLI`, `Library`, `Data Pipeline`, `ML`, `Desktop`, `Infrastructure`, anything.
+
 ```markdown
 # Tech Stack
 
@@ -207,14 +210,26 @@ your-project/
 - Compliance domain: hipaa
 ```
 
-Plain markdown — no YAML or strict schema required. Add any sections your team needs (Database, Infrastructure, etc.).
+A CLI tool, a mobile app + API, or a data pipeline are declared the same way:
+
+```markdown
+# Tech Stack
+
+## CLI
+- Language: Go 1.22
+- Arg parsing: cobra
+- Test runner: testing + testify
+```
+
+Plain markdown — no YAML or strict schema required.
 
 ### Mode detection for `/coding`
 
 | `tech-stack.md` content | Mode |
 |---|---|
-| Has both `## Frontend` and `## Backend` sections | **Fullstack** — Contract Agent → UI + Backend Agents |
-| Has only one section | **Single-stack** — uses declared stack directly |
+| Exactly `## Frontend` + `## Backend` | **Fullstack web** — Contract Agent → UI + Backend Agents |
+| Any other combination of 2+ component sections | **Multi-component** — Contract Agent → Coding + Test Agents per component |
+| One component section | **Single-component** — uses declared stack directly |
 | File not present | Skills ask one plain-English question before proceeding |
 
 ### What each skill uses it for
@@ -260,6 +275,8 @@ Every skill runs a fully automatic **Step 0** before its main logic. No manual s
 ```
 
 From the second invocation onwards, graphify is already installed and the graph already exists — Step 0 completes in under a second.
+
+**Within a single conversation, Step 0 runs once.** If the orchestrator or a prior skill already loaded Stack Config and KG Context, every later skill reuses them instead of re-reading — an orchestrated 5-phase run reads the graph report once, not five times.
 
 ### What graphify produces
 
@@ -416,23 +433,25 @@ Produces text-based system design artefacts: architecture diagrams, ADRs, tech-s
 
 ## Coding
 
-Drives a multi-agent sequential flow from stack detection through validation. The mode is determined automatically from `tech-stack.md`.
+Drives a multi-agent sequential flow from stack detection through validation, for any kind of project — web, API, CLI, library, mobile, desktop, data/ML, infrastructure. The mode is determined automatically from `tech-stack.md`.
 
 ### How to invoke
 
 ```
-/coding        # reads tech-stack.md — fullstack or single-stack depending on content
+/coding        # reads tech-stack.md — single-component, fullstack web, or multi-component
 ```
 
-If no `tech-stack.md` is present, the skill asks one question: what stack to scaffold.
+If no `tech-stack.md` is present, the skill asks one question: what to build and with what stack.
 
 ### Supported stacks
 
-Node.js + TypeScript · Python + FastAPI · Go + Gin · Java + Spring Boot · Rust + Axum · .NET 8 + ASP.NET Core · React + Vite · Next.js · Vue · SvelteKit
+Detailed scaffold references ship for: Node.js + TypeScript · Python + FastAPI · Go + Gin · Java + Spring Boot · Rust + Axum · .NET 8 + ASP.NET Core · React + Vite · Next.js · Vue · SvelteKit
 
-### Single-stack mode
+**Any other stack works too** (Swift, Kotlin, Flutter, PHP, Ruby, Elixir, C++, Terraform, ...) — the agents follow a generic protocol (`references/stacks/generic.md`): the ecosystem's canonical layout, standard build tooling, and de-facto test framework.
 
-Triggered when `tech-stack.md` has only one section (Frontend or Backend).
+### Single-component mode
+
+Triggered when `tech-stack.md` has exactly one component section — a service, CLI, library, mobile app, pipeline, or anything else.
 
 ```
 [Coding Agent] → [Unit Test Agent] → [Validator Agent]
@@ -442,9 +461,9 @@ Triggered when `tech-stack.md` has only one section (Frontend or Backend).
 2. **Unit Test Agent** — reads the generated code, selects the idiomatic test framework from Stack Config, writes test stubs with coverage targets (90%+ auth/payments, 80%+ APIs)
 3. **Validator Agent** — pass/fail verdict across Correctness, Security, and Test Quality
 
-### Fullstack mode
+### Fullstack web mode
 
-Triggered when `tech-stack.md` has both `## Frontend` and `## Backend` sections. Both frontend and backend code are placed under the **same parent repository** as a monorepo.
+Triggered when `tech-stack.md` has exactly `## Frontend` and `## Backend` sections. Both frontend and backend code are placed under the **same parent repository** as a monorepo.
 
 ```
 [Contract Agent]
@@ -474,10 +493,30 @@ frontend/           backend/
 
 **Validator Agent** — reviews both layers and checks contract conformance (every `operationId` in the spec must have a backend handler and a frontend client function).
 
+### Multi-component mode
+
+Triggered by any other combination of 2+ component sections — e.g. `## Mobile` + `## Backend`, `## CLI` + `## Library`, `## Data Pipeline` + `## Backend`.
+
+```
+[Contract Agent]
+       │
+       ├─ establishes the monorepo layout (one directory per component)
+       └─ writes the interface contract matching how the components talk:
+          REST → docs/openapi.yaml · GraphQL → docs/schema.graphql
+          gRPC → proto/*.proto · events → docs/asyncapi.yaml
+          in-process or data handoff → docs/CONTRACT.md
+              │
+   for each component, providers before consumers:
+   [Coding Agent] → [Unit Test Agent]
+              │
+       [Validator Agent]
+       (checks every component + contract conformance)
+```
+
 ### Key rules
 
 - No agent writes any file until it receives explicit user confirmation for its own planning step
-- Three confirmation gates in fullstack mode: monorepo structure → openapi spec → code structure per layer
+- Confirmation gates: monorepo structure → interface contract → code structure per component
 - Hardcoded secrets are always HIGH severity in the Validator report
 - Generated code is immediately runnable — no `TODO` in production code paths
 
@@ -500,12 +539,24 @@ Generates the testing layers that sit above unit and integration stubs. If `/cod
 
 | Output | Description |
 |---|---|
-| E2E stubs | Playwright `.ts` files — one file per journey group |
+| E2E stubs | One file per journey group, in the project type's framework (see below) |
 | Acceptance scenarios | Given/When/Then in domain language, mapped from requirements |
 | Test data strategy | Fixtures, factory stubs, seed script outline |
-| Performance plan | k6/Locust/Artillery scenarios + latency/throughput targets |
-| Accessibility checklist | WCAG 2.1 AA automated (axe-core) + manual checks |
+| Performance plan | k6/Locust/Artillery scenarios + latency/throughput targets (or benchmarks/throughput for CLIs, libraries, pipelines) |
+| Accessibility checklist | WCAG 2.1 AA automated + manual checks — when the project has a UI |
 | QA strategy document | Full test pyramid for this feature, CI stage assignment |
+
+### E2E framework by project type
+
+| Project type | Framework |
+|---|---|
+| Web frontend | Playwright (or Cypress) |
+| API only | Supertest / httpx at the API boundary |
+| Mobile | Maestro · Detox · XCUITest · Espresso |
+| CLI tool | bats or subprocess tests — exit codes, stdout/stderr, produced files |
+| Desktop | Playwright (Electron/Tauri) or platform driver |
+| Library / SDK | Consumer-perspective example project |
+| Data pipeline / ML | Full-run fixture tests + data-quality suites / evaluation harness |
 
 ### Division of labour with `/coding`
 
@@ -514,7 +565,7 @@ Generates the testing layers that sit above unit and integration stubs. If `/cod
 | Unit test stubs | `/coding` — Unit Test Agent or Backend Test Agent |
 | Route integration stubs | `/coding` — Backend Test Agent |
 | Component + API client tests | `/coding` — UI Test Agent |
-| **E2E scenarios (Playwright)** | **`/qa`** |
+| **E2E scenarios (project type's framework)** | **`/qa`** |
 | **Acceptance mapping (Given/When/Then)** | **`/qa`** |
 | **Test data strategy** | **`/qa`** |
 | **Performance plan** | **`/qa`** |
@@ -685,16 +736,17 @@ techwave-toolkit/
 │   ├── coding/
 │   │   ├── SKILL.md                    # Mode detection + agent execution order
 │   │   ├── agents/
-│   │   │   ├── coding-agent.md         # Single-stack: reads Stack Config, writes code
-│   │   │   ├── test-agent.md           # Single-stack: writes unit test stubs
-│   │   │   ├── contract-agent.md       # Fullstack: proposes monorepo structure + openapi.yaml
-│   │   │   ├── ui-coding-agent.md      # Fullstack: generates frontend/ from openapi.yaml
-│   │   │   ├── backend-coding-agent.md # Fullstack: generates backend/ from openapi.yaml
-│   │   │   ├── ui-test-agent.md        # Fullstack: component + API client tests
-│   │   │   ├── backend-test-agent.md   # Fullstack: route integration + service unit tests
-│   │   │   └── validator-agent.md      # Both modes: correctness / security / test quality verdict
+│   │   │   ├── coding-agent.md         # Single/multi-component: reads Stack Config, writes code for any project type
+│   │   │   ├── test-agent.md           # Single/multi-component: writes unit test stubs
+│   │   │   ├── contract-agent.md       # Fullstack/multi-component: monorepo structure + interface contract
+│   │   │   ├── ui-coding-agent.md      # Fullstack web: generates frontend/ from openapi.yaml
+│   │   │   ├── backend-coding-agent.md # Fullstack web: generates backend/ from openapi.yaml
+│   │   │   ├── ui-test-agent.md        # Fullstack web: component + API client tests
+│   │   │   ├── backend-test-agent.md   # Fullstack web: route integration + service unit tests
+│   │   │   └── validator-agent.md      # All modes: correctness / security / test quality verdict
 │   │   └── references/
 │   │       └── stacks/
+│   │           ├── generic.md          # Protocol for any stack without a dedicated reference
 │   │           ├── nodejs.md           # Node.js + TypeScript + Express scaffold
 │   │           ├── python.md           # Python + FastAPI + Poetry scaffold
 │   │           ├── go.md               # Go + Gin scaffold
@@ -770,6 +822,36 @@ Both CLIs fire the compliance-scan hook after every file write:
 
 ---
 
+## Token Efficiency
+
+The plugin is designed so context cost stays proportional to the work actually done. The load hierarchy, cheapest to most expensive:
+
+| Layer | When it costs tokens |
+|---|---|
+| Frontmatter `description` | Every session — kept short and trigger-dense on purpose |
+| `SKILL.md` body | Only when the skill is invoked |
+| `agents/*.md` | Only when that agent's phase starts — one at a time, never preloaded |
+| `references/*.md` | Only on demand — one matching stack file, one compliance domain, never speculative |
+
+Rules the skills follow at runtime:
+
+- **Step 0 runs once per conversation.** Stack Config and KG Context are reused by every later skill — the orchestrator's 5-phase run pays for the graph read once. `GRAPH_REPORT.md` is read selectively, not in full, when large.
+- **Generated files are never echoed into chat.** Agents report trees, counts, and decisions; large contract drafts are confirmed via a condensed operation table (full draft on request).
+- **Findings cite `file:line`, not code blocks.** Validator and compliance reviews quote at most the offending line.
+- **Bulk generation can run in a subagent** (Claude Code): after the user confirms a component's structure, file-writing churn happens in an isolated context and only the summary returns to the conversation.
+
+### Checklist for new custom skills/agents
+
+If you add your own skill or agent to this plugin, keep it on the same budget:
+
+- [ ] `description` under ~60 words — it loads in every session
+- [ ] Dense domain knowledge goes in `references/`, loaded on demand — not in `SKILL.md`
+- [ ] Honor the Step 0 session-cache rule (`skills/shared/knowledge-graph.md`) instead of re-running detection
+- [ ] Report written files by name — never paste their contents back into chat
+- [ ] Load at most one reference variant per invocation (one stack, one domain, one framework)
+
+---
+
 ## Contributing
 
 1. Fork this repository.
@@ -780,11 +862,12 @@ Both CLIs fire the compliance-scan hook after every file write:
 
 ### Skill quality checklist
 
-- [ ] `description` field has 8+ distinct trigger phrases covering common user phrasings
+- [ ] `description` has 6–10 distinct trigger phrases covering common user phrasings — and stays under ~60 words (it loads in every session)
 - [ ] `SKILL.md` has a clear, numbered step-by-step process section
 - [ ] File-writing skills have `disable-model-invocation: true` in frontmatter
 - [ ] Reference files contain concrete examples — not prose summaries
 - [ ] The skill asks the user rather than guessing when context is ambiguous
+- [ ] The skill meets the [Token Efficiency](#token-efficiency) checklist
 - [ ] `claude plugin validate .` passes before submitting
 
 ---

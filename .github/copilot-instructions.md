@@ -11,7 +11,7 @@ Invoke any skill with `/skill-name`:
 | Orchestrator | `/orchestrator` | Entry point — drives the full dev workflow from a ticket, GitHub issue, or plain text |
 | Requirements | `/requirements` | Writes user stories, acceptance criteria, BDD scenarios |
 | Design | `/design` | Creates HLD and LLD saved to `docs/`, ADRs, tech-stack evaluations |
-| Coding | `/coding [stack]` | Contract Agent → UI + Backend Coding Agents → Test Agents → Validator (fullstack), or single-stack flow |
+| Coding | `/coding [stack]` | Any project type — single-component flow, fullstack web (UI + Backend agents), or multi-component with an interface contract |
 | QA | `/qa` | E2E scenarios, acceptance mapping, test data strategy, performance plan — layers above what `/coding` generates |
 | Compliance | `/compliance [domain]` | HIPAA, PCI DSS, GDPR, SOC 2 code-level review |
 

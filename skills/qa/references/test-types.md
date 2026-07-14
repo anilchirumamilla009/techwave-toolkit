@@ -4,11 +4,11 @@
 
 ```
          /\
-        /E2E\         /qa skill — Playwright journey stubs, acceptance scenarios
+        /E2E\         /qa skill — journey stubs (project type's framework), acceptance scenarios
        /------\
-      / Integ  \      /coding skill — Backend Test Agent (route integration tests)
+      / Integ  \      /coding skill — test agents (route/module integration tests)
      /----------\
-    / Unit Tests \    /coding skill — UI Test Agent + Backend Test Agent
+    / Unit Tests \    /coding skill — test agents
    /--------------\
 ```
 
@@ -18,8 +18,8 @@ The `/qa` skill owns the top of the pyramid. The `/coding` skill owns unit and i
 
 ## E2E Tests
 
-- **Scope**: Full user journeys through the running application (real browser, real backend, real DB)
-- **Dependencies**: Real running application + seeded test database
+- **Scope**: Full journeys through the real, running software — a browser flow for web, a device/simulator flow for mobile, a real process invocation for a CLI, a full run on fixture data for a pipeline, a consumer example project for a library
+- **Dependencies**: Real running application + seeded test data (database, fixture files, or device state)
 - **Speed**: 1s–30s per test — keep the suite small
 - **Quantity**: 3–7 journeys per feature — cover what must never break
 - **When**: After `/coding` has produced code and unit/integration tests

@@ -1,7 +1,7 @@
 ---
 name: compliance
-description: 'This skill should be used when the user asks about "HIPAA compliance", "PCI DSS", "GDPR", "SOC 2", "compliance review", "data privacy check", "security audit for", "check regulatory requirements", "is this HIPAA compliant", "review for PCI", "GDPR requirements", "data protection", "healthcare compliance", "financial compliance", "EU privacy", "personal data handling", or any domain-specific regulatory validation. Pass the domain as an argument: /compliance health, /compliance finance, /compliance eu, /compliance soc2.'
-version: 0.3.0
+description: 'Use for regulatory reviews — "HIPAA compliance", "PCI DSS", "GDPR", "SOC 2", "compliance review", "data privacy check", "security audit", "is this compliant" — or any domain-specific regulatory validation. Pass the domain as an argument: /compliance health | finance | eu | soc2.'
+version: 0.4.0
 user-invocable: true
 ---
 
@@ -18,6 +18,8 @@ Invoke when the user wants to validate that their code or architecture meets reg
 ## Step 0 — Build and Read the Knowledge Graph (REQUIRED)
 
 **Complete all sub-steps before Step 1. Use Bash and Read tools directly — do not ask the user to run anything.**
+
+**Reuse first:** if Stack Config and KG Context are already loaded in this conversation (the orchestrator or a prior skill ran Step 0), reuse them and skip 0.0–0.3 — do not re-read or re-run anything.
 
 **0.0 Read Stack Config (do this first)**
 Use the Read tool: try `.github/tech-stack.md`, then `.claude/tech-stack.md`. If found, hold as **Stack Config** — if it declares a `Compliance domain` in the Notes section, use that to route to the correct reference file in Arguments Routing; skip auto-detection.
@@ -142,6 +144,8 @@ For each failing control, provide a concrete before/after code example in the ap
 
 ## Key Rules
 
+- Load exactly one domain reference file per review — never several speculatively; for multi-domain requests, run one domain at a time
+- Cite evidence as `file:line` — quote only the offending line, not surrounding code; full code appears only in remediation before/after examples
 - Always distinguish between technical controls (code-fixable) and non-technical controls (policy/process)
 - Never mark a control as "Pass" without citing specific code evidence (file and approximate line)
 - Mark controls as "Manual" when they require runtime verification (e.g., encryption at rest must be verified at the infrastructure level, not just the code level)

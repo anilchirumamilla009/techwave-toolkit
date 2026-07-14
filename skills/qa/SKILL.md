@@ -1,7 +1,7 @@
 ---
 name: qa
-description: 'This skill should be used when the user asks to "create a QA plan", "write E2E tests", "write acceptance tests", "plan end-to-end scenarios", "test strategy for", "what should we test beyond unit tests", "performance testing plan", "load testing strategy", "accessibility testing", "write Playwright tests", "write Cypress tests", "test data strategy", "generate fixtures", "map requirements to test scenarios", "QA acceptance criteria", or needs test coverage that goes beyond unit and integration stubs. This skill focuses on E2E, acceptance, performance, and test data — the layers the coding skill does not generate.'
-version: 0.6.0
+description: 'Use when the user asks for a "QA plan", "E2E tests", "acceptance tests", "test strategy", "performance testing plan", "load testing", "accessibility testing", "test data strategy", "generate fixtures", or requirement-to-scenario mapping. Covers the test layers above unit/integration — E2E, acceptance, performance, test data — for any project type (web, API, mobile, CLI, library, data/ML).'
+version: 0.7.0
 user-invocable: true
 ---
 
@@ -9,12 +9,12 @@ user-invocable: true
 
 ## Overview
 
-This skill produces the testing layers that sit above unit and integration tests:
-- **E2E test stubs** (Playwright/Cypress) for critical user journeys
+This skill produces the testing layers that sit above unit and integration tests, for any project type — web, API, mobile, CLI, library, desktop, data pipeline, ML:
+- **E2E test stubs** in the framework that fits the project type (see Step 3)
 - **Acceptance scenarios** mapped from requirements to Given/When/Then
 - **Test data strategy** — fixtures, factories, seed scripts
 - **Performance and load testing plan**
-- **Accessibility testing checklist** (WCAG 2.1 AA)
+- **Accessibility testing checklist** (WCAG 2.1 AA — when the project has a UI)
 - **QA strategy document** describing the full test pyramid for this feature
 
 If `/coding` already ran, this skill detects existing unit and integration test files and does not regenerate them — it focuses only on the layers above.
@@ -24,6 +24,8 @@ If `/coding` already ran, this skill detects existing unit and integration test 
 ## Step 0 — Build and Read the Knowledge Graph (REQUIRED)
 
 **Complete all sub-steps before Step 1. Use Bash and Read tools directly — do not ask the user to run anything.**
+
+**Reuse first:** if Stack Config and KG Context are already loaded in this conversation (the orchestrator or a prior skill ran Step 0), reuse them and skip 0.0–0.3 — do not re-read or re-run anything.
 
 **0.0 Read Stack Config (do this first)**
 Use the Read tool: try `.github/tech-stack.md`, then `.claude/tech-stack.md`. If found, hold as **Stack Config** — use declared stack and test runner in Step 2; skip marker-file detection.
@@ -58,7 +60,7 @@ find . -name "*.test.ts" -o -name "*.spec.ts" -o -name "*.test.js" \
 
 Also check for:
 - `e2e/` or `playwright/` or `cypress/` directory → E2E tests already exist
-- `openapi.yaml` or `docs/openapi.yaml` → fullstack project with contract
+- A contract file (`docs/openapi.yaml`, `docs/schema.graphql`, `proto/`, `docs/asyncapi.yaml`, `docs/CONTRACT.md`) → multi-component project with a contract
 
 **Triage:**
 
@@ -67,23 +69,26 @@ Also check for:
 | Unit/integration test files exist | Skip unit/integration generation — note what already exists |
 | E2E directory exists | Read existing E2E tests, extend with missing journeys only |
 | No test files at all | Generate E2E stubs + note that unit/integration coverage is missing (suggest `/coding`) |
-| `openapi.yaml` found | Read it — derive journey list from the API contract paths |
+| Contract file found (`openapi.yaml`, `schema.graphql`, `*.proto`, `CONTRACT.md`) | Read it — derive the journey list from the contract's operations |
 
 ---
 
 ## Step 2 — Identify E2E Journeys
 
-Identify the 3–7 critical user journeys that must never break. Derive from:
-1. `openapi.yaml` paths (if present) — group endpoints into user-visible flows
+Identify the 3–7 critical journeys that must never break. A "journey" depends on the project type: a user flow for a web/mobile/desktop app, a request sequence for an API, a command invocation for a CLI, a public-API usage path for a library, a full run for a pipeline or ML job. Derive from:
+1. The interface contract if present (`openapi.yaml`, `schema.graphql`, `.proto`, `CONTRACT.md`) — group operations into consumer-visible flows
 2. KG Context — user-facing modules and flows the graph highlights
 3. Requirements context (from orchestrator or `$ARGUMENTS`)
 
 **Journey selection criteria:**
-- Authentication (login, logout, session expiry) → always include
-- The primary value action (the main thing the app does) → always include
+- Authentication / authorization (if applicable) → always include
+- The primary value action (the main thing this software does) → always include
 - Payment or subscription flow (if applicable) → always include
 - Data creation / deletion that is hard to undo → include
 - Admin or privileged actions → include if applicable
+- CLI: the documented happy-path invocation + the most likely misuse (bad args, missing input file)
+- Library: the README quick-start example, verified end-to-end
+- Pipeline / ML: a full run on fixture data with output-schema and quality assertions
 
 Present the journey list to the user for confirmation before generating stubs.
 
@@ -91,15 +96,22 @@ Present the journey list to the user for confirmation before generating stubs.
 
 ## Step 3 — Generate E2E Stubs
 
-Select E2E framework from Stack Config or `references/frameworks.md`:
+Select the E2E framework by project type, from Stack Config or `references/frameworks.md`:
 
-| Stack Config Frontend | E2E Framework |
+| Project type | E2E framework |
 |---|---|
-| React, Vue, SvelteKit, Next.js | Playwright (preferred) |
-| Any web frontend | Playwright as default; Cypress if team prefers |
-| No frontend (API only) | Supertest / httpx integration tests at the API boundary |
+| Web frontend (React, Vue, SvelteKit, Next.js, any) | Playwright (preferred); Cypress if team prefers |
+| API only (REST/GraphQL/gRPC) | Supertest (Node) / httpx + pytest (Python) / `net/http/httptest` (Go) at the API boundary |
+| Mobile | Maestro (cross-platform preferred); Detox (React Native), XCUITest (iOS), Espresso (Android) |
+| CLI tool | bats (shell) or the stack's subprocess testing (pytest + `subprocess`, Go `os/exec`) — assert on exit code, stdout/stderr, produced files |
+| Desktop | Playwright (Electron/Tauri); platform driver (WinAppDriver, XCUITest) otherwise |
+| Library / SDK | Consumer-perspective integration tests: a small example project importing the published API |
+| Data pipeline | Full-run test on fixture data + data-quality assertions (Great Expectations, dbt tests, plain pytest) |
+| ML project | Evaluation harness: held-out set metrics vs. thresholds + inference smoke test |
 
-Generate Playwright stubs for each confirmed journey:
+If Stack Config declares a test framework for this layer, that declaration wins.
+
+For web frontends, generate Playwright stubs for each confirmed journey:
 
 ```typescript
 import { test, expect } from '@playwright/test'
@@ -125,6 +137,8 @@ test.describe('<Feature>: <Journey name>', () => {
 ```
 
 Include Playwright config (`playwright.config.ts`) if it does not already exist.
+
+For non-web project types, generate stubs in the selected framework following the same pattern: one file per journey group, a happy-path case and an error/edge case per journey, every stub named after the observable outcome. `references/frameworks.md` has starter stubs per project type.
 
 ---
 
@@ -168,7 +182,7 @@ Generate a stub `e2e/fixtures/` structure and at minimum one factory file matchi
 
 ## Step 6 — Performance Plan (if applicable)
 
-Include when: KG Context shows latency-sensitive modules, `openapi.yaml` has high-traffic endpoints, or Stack Config notes performance requirements.
+Include when: KG Context shows latency-sensitive modules, the contract has high-traffic operations, or Stack Config notes performance requirements. For non-service projects, adapt the targets: pipeline → throughput (rows/sec) and max wall-clock per run; CLI → startup time and large-input handling; library → hot-path benchmarks (criterion, JMH, pytest-benchmark); ML → inference latency and memory.
 
 ```
 ## Performance Testing Plan
@@ -196,7 +210,7 @@ Skip this section if the feature is low-traffic utility code.
 
 ## Step 7 — Accessibility Checklist (if UI exists)
 
-Include when Stack Config declares a Frontend section.
+Include when the project has any user interface — a Frontend section in Stack Config, a mobile app, or a desktop app. Skip entirely for APIs, CLIs, libraries, and pipelines. For mobile, swap axe-core for the platform tooling (Accessibility Scanner on Android, Accessibility Inspector on iOS) — the manual checks below still apply.
 
 ```
 ## Accessibility Review (WCAG 2.1 AA)
@@ -220,18 +234,20 @@ Include when Stack Config declares a Frontend section.
 
 Produce in this order:
 1. **QA Strategy document** — scope, what coding already covers, what this skill adds
-2. **E2E stubs** (Playwright `.ts` files, one file per journey group)
+2. **E2E stubs** (in the Step 3 framework, one file per journey group)
 3. **Acceptance scenarios** (Given/When/Then, plain text)
-4. **Test data files** (`e2e/fixtures/`, factory stub)
+4. **Test data files** (`e2e/fixtures/` or equivalent, factory stub)
 5. **Performance plan** (if applicable)
-6. **Accessibility checklist** (if frontend present)
-7. **Getting started commands** (`npx playwright test`, seed script, etc.)
+6. **Accessibility checklist** (if a UI exists)
+7. **Getting started commands** (`npx playwright test`, `maestro test`, `bats tests/`, seed script — whatever matches the framework)
 
 ---
 
 ## Key Rules
 
 - Never regenerate unit or integration stubs if coding skill already produced them — note what exists, focus on gaps
+- Write stubs to files and report the file list plus one representative stub — never paste every generated file into chat
+- Load `references/frameworks.md` only when generating stubs, and only once per invocation
 - E2E tests cover journeys, not implementation details — no assertions on class names or DOM structure beyond user-visible text and ARIA roles
 - Test names describe the user's observable outcome: "user sees dashboard after login" not "login route returns 200"
 - Acceptance scenarios are in domain language — no code references

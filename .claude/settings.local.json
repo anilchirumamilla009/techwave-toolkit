@@ -2,7 +2,10 @@
   "permissions": {
     "allow": [
       "Skill(claude-api)",
-      "Bash(claude plugin *)"
+      "Bash(claude plugin *)",
+      "Read(///wsl.localhost/Ubuntu/opt/projects/**)",
+      "Bash(rm -rf skills/test-plan/references)",
+      "Bash(python -)"
     ]
   }
 }

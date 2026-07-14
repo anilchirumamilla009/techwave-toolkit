@@ -1,7 +1,7 @@
 ---
 name: requirements
-description: This skill should be used when the user asks to "write user stories", "define acceptance criteria", "write BDD scenarios", "break down this epic", "capture requirements for", "write specs for", "create acceptance tests definition", "document requirements", "define done criteria", "write feature requirements", "create a product backlog item", or needs structured requirements for any feature or system. Use this skill to transform vague ideas into well-formed, behavior-first requirements artifacts.
-version: 0.3.0
+description: Use when the user asks to "write user stories", "define acceptance criteria", "write BDD scenarios", "break down this epic", "capture requirements", "write specs", or "document requirements" for any feature or system. Transforms vague ideas into behavior-first requirements artifacts.
+version: 0.4.0
 user-invocable: true
 ---
 
@@ -10,6 +10,8 @@ user-invocable: true
 ## Step 0 — Build and Read the Knowledge Graph (REQUIRED)
 
 **Complete all sub-steps before Step 1. Use Bash and Read tools directly — do not ask the user to run anything.**
+
+**Reuse first:** if Stack Config and KG Context are already loaded in this conversation (the orchestrator or a prior skill ran Step 0), reuse them and skip 0.0–0.3 — do not re-read or re-run anything.
 
 **0.0 Read Stack Config (do this first)**
 Use the Read tool: try `.github/tech-stack.md`, then `.claude/tech-stack.md`. If found, hold as **Stack Config** — use declared stack for Technical Notes; skip marker-file detection in all later steps.

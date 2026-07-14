@@ -1,7 +1,7 @@
 ---
 name: orchestrator
-description: This skill should be used when the user says "start sdlc", "kick off development", "begin the workflow", "orchestrate this feature", "run the full pipeline", "drive development from this ticket", "use this Jira ticket", "use this wiki page", "start from this requirement", "process this story", "begin with PROJ-123", or provides a ticket ID like ABC-123 or a Confluence/GitHub URL as the starting point for development.
-version: 0.3.0
+description: Use when the user says "start sdlc", "kick off development", "run the full pipeline", "orchestrate this feature", "drive development from this ticket", or provides a ticket ID (ABC-123), GitHub issue URL, or Confluence page as the starting point for development.
+version: 0.4.0
 disable-model-invocation: true
 user-invocable: true
 ---
@@ -32,6 +32,8 @@ You do not generate artifacts yourself. You coordinate: parse the input, detect 
 ## Step 0 — Build and Read the Knowledge Graph (REQUIRED)
 
 **Complete all sub-steps before Step 1. Use Bash and Read tools directly — do not ask the user to run anything.**
+
+**Reuse first:** if Stack Config and KG Context are already loaded in this conversation, reuse them and skip 0.0–0.3. When this orchestrator later invokes phase skills, each of them reuses this Step 0's context — they must not re-run it.
 
 **0.0 Read Stack Config (do this first)**
 Use the Read tool: try `.github/tech-stack.md`, then `.claude/tech-stack.md`. If found, hold as **Stack Config** — populate the requirement struct's Stack signals and Domain fields from it in Step 2; skip marker-file stack detection.

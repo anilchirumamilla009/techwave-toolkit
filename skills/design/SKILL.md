@@ -1,7 +1,7 @@
 ---
 name: design
-description: This skill should be used when the user asks to "design the system", "create an architecture diagram", "draw a component diagram", "write an ADR", "architecture decision record", "tech stack recommendation", "system design for", "design the components of", "create a sequence diagram", "draw an ER diagram", "C4 diagram", "design the data model", "propose a solution architecture", "create HLD", "create LLD", "high level design", "low level design", or needs any form of system design or architectural documentation. Use this skill for technical design artifacts across any technology stack.
-version: 0.3.0
+description: Use when the user asks to "design the system", create an "architecture diagram", "component diagram", "sequence diagram", "ER diagram", "C4 diagram", "data model", write an "ADR", recommend a "tech stack", or produce "HLD"/"LLD" (high/low level design) — design artifacts for any technology stack.
+version: 0.4.0
 disable-model-invocation: true
 user-invocable: true
 ---
@@ -11,6 +11,8 @@ user-invocable: true
 ## Step 0 — Build and Read the Knowledge Graph (REQUIRED)
 
 **Complete all sub-steps before Step 1. Use Bash and Read tools directly — do not ask the user to run anything.**
+
+**Reuse first:** if Stack Config and KG Context are already loaded in this conversation (the orchestrator or a prior skill ran Step 0), reuse them and skip 0.0–0.3 — do not re-read or re-run anything.
 
 **0.0 Read Stack Config (do this first)**
 Use the Read tool: try `.github/tech-stack.md`, then `.claude/tech-stack.md`. If found, hold as **Stack Config** — skip the constraint-gathering questions in Step 2 (stack, deployment target, etc. are already declared); proceed straight to the scoring matrix.

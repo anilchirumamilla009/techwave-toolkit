@@ -7,6 +7,12 @@ Official graphify: https://graphify.net | PyPI package: `pip install graphifyy`
 
 ---
 
+## Session Cache Rule (check before anything else)
+
+If **Stack Config** and **KG Context** are already loaded in this conversation — because the orchestrator or a previously invoked skill completed Step 0 — **reuse them and skip Steps 0.0–0.3 entirely.** Do not re-read `tech-stack.md`, re-check the graphify install, or re-read `GRAPH_REPORT.md`. Re-run Step 0 only if files were written since the context was loaded and the task depends on seeing them (then re-read only `GRAPH_REPORT.md`, not the install/build steps).
+
+---
+
 ## Full Protocol (run in order, do not skip steps)
 
 ### Step 0.0 — Read Stack Config (do this first)
@@ -75,9 +81,9 @@ grep -qF "graphify-out/" .gitignore 2>/dev/null || printf "\n# graphify knowledg
 
 ### Step 0.3 — Read the knowledge graph
 
-Use the Read tool to read `graphify-out/GRAPH_REPORT.md` in full.
+Use the Read tool to read `graphify-out/GRAPH_REPORT.md` — **selectively, not exhaustively**. Read the summary/module sections first; if the report is long (> ~300 lines), read only the sections matching the Per-Skill Focus table below rather than the whole file.
 
-Extract and hold as **KG Context**:
+Extract and hold as **KG Context** (the extract, not the raw report, is what later steps use):
 - Core modules and their stated purpose
 - Key classes, functions, entities relevant to the current task
 - Dominant stack and framework

@@ -1,12 +1,21 @@
 # E2E & QA Framework Reference
 
-## E2E Framework Selection
+## E2E Framework Selection (by project type)
 
-| Stack Config Frontend | E2E Framework | Install |
+| Project type | E2E Framework | Install |
 |---|---|---|
-| React, Next.js, Vue, SvelteKit (any web) | Playwright | `npm i -D @playwright/test && npx playwright install` |
-| React / Next.js (team prefers Cypress) | Cypress | `npm i -D cypress` |
-| No frontend — API only | Supertest (Node.js) / httpx (Python) | per stack below |
+| Web frontend (React, Next.js, Vue, SvelteKit, any) | Playwright | `npm i -D @playwright/test && npx playwright install` |
+| Web frontend (team prefers Cypress) | Cypress | `npm i -D cypress` |
+| API only — Node.js | Supertest | `npm i -D supertest` |
+| API only — Python | httpx + pytest | `pip install httpx pytest` |
+| Mobile (cross-platform) | Maestro | `curl -Ls https://get.maestro.mobile.dev \| bash` |
+| Mobile (React Native) | Detox | `npm i -D detox` |
+| Mobile (native iOS / Android) | XCUITest / Espresso | ships with Xcode / Android Studio |
+| CLI tool | bats, or pytest + `subprocess` / Go `os/exec` | `npm i -g bats` or per stack |
+| Desktop (Electron / Tauri) | Playwright | as above |
+| Library / SDK | example project importing the published API | per stack |
+| Data pipeline | Great Expectations / dbt tests / pytest full-run | `pip install great_expectations` |
+| ML project | evaluation harness (pytest + metrics thresholds) | per stack |
 
 Unit and integration test frameworks are handled by the `/coding` skill's test agents. This reference focuses on E2E and QA-layer tooling.
 
@@ -90,6 +99,92 @@ test('login page has no critical accessibility violations', async ({ page }) => 
   expect(results.violations).toEqual([])
 })
 ```
+
+---
+
+## Maestro (E2E — mobile, cross-platform)
+
+### Journey stub: `e2e/flows/login.yaml`
+```yaml
+appId: com.example.app
+---
+- launchApp
+- tapOn: "Email"
+- inputText: "user@example.com"
+- tapOn: "Password"
+- inputText: "validpassword"
+- tapOn: "Sign In"
+- assertVisible: "Welcome"
+```
+
+### Run commands
+```bash
+maestro test e2e/flows/login.yaml    # single flow
+maestro test e2e/flows/              # all flows
+```
+
+---
+
+## CLI Testing (bats / subprocess)
+
+### bats stub: `tests/e2e/cli.bats`
+```bash
+#!/usr/bin/env bats
+
+@test "prints version with --version" {
+  run mycli --version
+  [ "$status" -eq 0 ]
+  [[ "$output" =~ ^mycli\ [0-9]+\.[0-9]+ ]]
+}
+
+@test "fails with exit 2 and usage on missing input file" {
+  run mycli process ./does-not-exist.csv
+  [ "$status" -eq 2 ]
+  [[ "$output" =~ "No such file" ]]
+}
+```
+
+### pytest + subprocess stub (any stack)
+```python
+# tests/e2e/test_cli.py
+import subprocess
+
+def test_happy_path_writes_output(tmp_path):
+    out = tmp_path / "result.json"
+    r = subprocess.run(["mycli", "process", "fixtures/sample.csv", "-o", str(out)],
+                       capture_output=True, text=True)
+    assert r.returncode == 0
+    assert out.exists()
+
+def test_bad_args_exit_nonzero():
+    r = subprocess.run(["mycli", "--bogus"], capture_output=True, text=True)
+    assert r.returncode != 0
+    assert "usage" in r.stderr.lower()
+```
+
+Assert on the CLI's public surface only: exit codes, stdout/stderr, files produced — never internals.
+
+---
+
+## Data Pipeline Testing
+
+### Full-run test on fixture data
+```python
+# tests/e2e/test_pipeline_run.py
+from pipeline import run
+
+def test_full_run_on_fixture(tmp_path):
+    result = run(input_path="fixtures/sample_events.jsonl", output_dir=tmp_path)
+    assert result.rows_out > 0
+    assert result.rows_rejected == 0          # fixture is known-clean
+    # output schema invariants
+    df = result.load_output()
+    assert set(df.columns) >= {"id", "timestamp", "amount"}
+    assert df["id"].is_unique
+    assert df["amount"].ge(0).all()
+```
+
+Data-quality suites (Great Expectations, dbt tests) belong in CI on every run, not only in E2E: uniqueness, nullability, referential integrity, value ranges, row-count deltas vs. previous run.
 
 ---
 
