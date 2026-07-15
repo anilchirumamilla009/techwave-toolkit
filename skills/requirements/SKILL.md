@@ -1,7 +1,7 @@
 ---
 name: requirements
 description: Use when the user asks to "write user stories", "define acceptance criteria", "write BDD scenarios", "break down this epic", "capture requirements", "write specs", or "document requirements" for any feature or system. Transforms vague ideas into behavior-first requirements artifacts.
-version: 0.4.0
+version: 0.5.0
 user-invocable: true
 ---
 
@@ -16,15 +16,19 @@ user-invocable: true
 **0.0 Read Stack Config (do this first)**
 Use the Read tool: try `.github/tech-stack.md`, then `.claude/tech-stack.md`. If found, hold as **Stack Config** — use declared stack for Technical Notes; skip marker-file detection in all later steps.
 
-**0.1 Install graphify if missing**
-```bash
-command -v graphify || pip install graphifyy || pip3 install graphifyy
-```
+**Greenfield skip:** if the project has no source files yet, skip 0.1–0.3 entirely — requirements need no code graph. Use Stack Config (0.0) alone.
 
-**0.2 Build the graph if missing**
+**0.1 Ensure graphify (consent-gated)**
 ```bash
-test -f graphify-out/GRAPH_REPORT.md && echo "EXISTS" || (graphify . && graphify claude install && grep -qF "graphify-out/" .gitignore 2>/dev/null || printf "\n# graphify\ngraphify-out/\n" >> .gitignore)
+command -v graphify
 ```
+Missing → ask the user once: install `graphifyy==0.9.16` (pinned) and wire it into this project (`.gitignore` entry, `graphify claude install`)? If yes: `pip install graphifyy==0.9.16 || pip3 install graphifyy==0.9.16`. If declined: skip 0.2–0.3, use Stack Config + marker files, do not ask again this conversation.
+
+**0.2 Build or refresh the graph**
+```bash
+if [ -f graphify-out/GRAPH_REPORT.md ]; then graphify .; else graphify . && graphify claude install && { grep -qF "graphify-out/" .gitignore 2>/dev/null || printf "\n# graphify\ngraphify-out/\n" >> .gitignore; }; fi
+```
+Existing graph → refreshed incrementally (AST cache, sub-second) so 0.3 reads current code. Missing → first build, consent-gated by 0.1.
 
 **0.3 Read the graph**
 Read `graphify-out/GRAPH_REPORT.md`. Extract: existing features or modules related to `$ARGUMENTS`, dominant stack, prior requirements or design docs. Hold as **KG Context**.

@@ -1,5 +1,5 @@
 {
-  "name": "tw-dev",
+  "name": "techwave",
   "owner": {
     "name": "Venkata Anil Kumar Chirumamilla",
     "email": "anil.chirumamilla@techwave.com"
@@ -10,7 +10,7 @@
       "name": "tw-dev",
       "source": ".",
       "description": "Dev-phase SDLC skills for any kind of development: orchestrate, requirements, design, coding (web, API, CLI, library, mobile, data/ML — single or multi-component with interface contracts), QA strategy (E2E/acceptance/performance), and compliance — stack and project-type agnostic",
-      "version": "0.7.0",
+      "version": "0.8.0",
       "category": "development"
     }
   ]

@@ -1,4 +1,9 @@
-idea
+# IDE
+.idea/
+
+# Python bytecode
+__pycache__/
+*.pyc
 
 # graphify knowledge graph output — rebuilt on demand via scripts/setup-kg.sh
 # Contents: graph.json, GRAPH_REPORT.md, graph.html, cache/

@@ -1,7 +1,7 @@
 ---
 name: orchestrator
 description: Use when the user says "start sdlc", "kick off development", "run the full pipeline", "orchestrate this feature", "drive development from this ticket", or provides a ticket ID (ABC-123), GitHub issue URL, or Confluence page as the starting point for development.
-version: 0.4.0
+version: 0.5.0
 disable-model-invocation: true
 user-invocable: true
 ---
@@ -38,15 +38,17 @@ You do not generate artifacts yourself. You coordinate: parse the input, detect 
 **0.0 Read Stack Config (do this first)**
 Use the Read tool: try `.github/tech-stack.md`, then `.claude/tech-stack.md`. If found, hold as **Stack Config** — populate the requirement struct's Stack signals and Domain fields from it in Step 2; skip marker-file stack detection.
 
-**0.1 Install graphify if missing**
+**0.1 Ensure graphify (consent-gated)**
 ```bash
-command -v graphify || pip install graphifyy || pip3 install graphifyy
+command -v graphify
 ```
+Missing → ask the user once: install `graphifyy==0.9.16` (pinned) and wire it into this project (`.gitignore` entry, `graphify claude install`)? If yes: `pip install graphifyy==0.9.16 || pip3 install graphifyy==0.9.16`. If declined: skip 0.2–0.3, use Stack Config + marker files, do not ask again this conversation.
 
-**0.2 Build the graph if missing**
+**0.2 Build or refresh the graph**
 ```bash
-test -f graphify-out/GRAPH_REPORT.md && echo "EXISTS" || (graphify . && graphify claude install && grep -qF "graphify-out/" .gitignore 2>/dev/null || printf "\n# graphify\ngraphify-out/\n" >> .gitignore)
+if [ -f graphify-out/GRAPH_REPORT.md ]; then graphify .; else graphify . && graphify claude install && { grep -qF "graphify-out/" .gitignore 2>/dev/null || printf "\n# graphify\ngraphify-out/\n" >> .gitignore; }; fi
 ```
+Existing graph → refreshed incrementally (AST cache, sub-second) so 0.3 reads current code. Missing → first build, consent-gated by 0.1.
 
 **0.3 Read the graph**
 Read `graphify-out/GRAPH_REPORT.md`. Extract: completed phases, existing artifacts (design docs, test files, source dirs), dominant stack. Hold as **KG Context** for all subsequent steps.
@@ -205,14 +207,14 @@ Completed phases:
   ✓ Requirements — X user stories, Y acceptance criteria
   ✓ Design — HLD + LLD saved to docs/, 1 ADR
   ✓ Coding — code written, tests generated, validation passed
-  ✓ Test Plan — stubs + coverage targets
+  ✓ QA — manual test plan (docs/TEST_PLAN-*.md) + E2E stubs + coverage targets
   ✓ Compliance — HIPAA: 3 controls applied
 
 Skipped: [list any skipped phases]
 
 Next steps:
   - Review generated files
-  - Run: claude plugin details techwave-toolkit  (to see all available skills)
+  - Run: claude plugin details tw-dev  (to see all available skills)
   - Re-invoke any skill individually: /requirements, /design, etc.
 ```
 

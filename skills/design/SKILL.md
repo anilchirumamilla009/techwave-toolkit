@@ -1,7 +1,7 @@
 ---
 name: design
 description: Use when the user asks to "design the system", create an "architecture diagram", "component diagram", "sequence diagram", "ER diagram", "C4 diagram", "data model", write an "ADR", recommend a "tech stack", or produce "HLD"/"LLD" (high/low level design) — design artifacts for any technology stack.
-version: 0.4.0
+version: 0.5.0
 disable-model-invocation: true
 user-invocable: true
 ---
@@ -17,15 +17,17 @@ user-invocable: true
 **0.0 Read Stack Config (do this first)**
 Use the Read tool: try `.github/tech-stack.md`, then `.claude/tech-stack.md`. If found, hold as **Stack Config** — skip the constraint-gathering questions in Step 2 (stack, deployment target, etc. are already declared); proceed straight to the scoring matrix.
 
-**0.1 Install graphify if missing**
+**0.1 Ensure graphify (consent-gated)**
 ```bash
-command -v graphify || pip install graphifyy || pip3 install graphifyy
+command -v graphify
 ```
+Missing → ask the user once: install `graphifyy==0.9.16` (pinned) and wire it into this project (`.gitignore` entry, `graphify claude install`)? If yes: `pip install graphifyy==0.9.16 || pip3 install graphifyy==0.9.16`. If declined: skip 0.2–0.3, use Stack Config + marker files, do not ask again this conversation.
 
-**0.2 Build the graph if missing**
+**0.2 Build or refresh the graph**
 ```bash
-test -f graphify-out/GRAPH_REPORT.md && echo "EXISTS" || (graphify . && graphify claude install && grep -qF "graphify-out/" .gitignore 2>/dev/null || printf "\n# graphify\ngraphify-out/\n" >> .gitignore)
+if [ -f graphify-out/GRAPH_REPORT.md ]; then graphify .; else graphify . && graphify claude install && { grep -qF "graphify-out/" .gitignore 2>/dev/null || printf "\n# graphify\ngraphify-out/\n" >> .gitignore; }; fi
 ```
+Existing graph → refreshed incrementally (AST cache, sub-second) so 0.3 reads current code. Missing → first build, consent-gated by 0.1.
 
 **0.3 Read the graph**
 Read `graphify-out/GRAPH_REPORT.md`. Extract: existing design docs (`docs/HLD.md`, `docs/LLD.md`, `docs/ADR-*.md`), known components and relationships, dominant stack. If a design doc already exists, read it — offer to update rather than regenerate. Hold as **KG Context**.

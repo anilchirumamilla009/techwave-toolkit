@@ -1,7 +1,7 @@
 ---
-name: qa
+name: test-plan
 description: 'Moved — use /qa. This location is kept for backwards compatibility only.'
-version: 0.6.0
+version: 0.7.0
 user-invocable: false
 ---
 

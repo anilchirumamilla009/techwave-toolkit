@@ -4,8 +4,13 @@
 # Output: graphify-out/graph.json, graphify-out/GRAPH_REPORT.md, graphify-out/cache/
 set -euo pipefail
 
-if [ -f "graphify-out/graph.json" ]; then
-  echo "[kg] Knowledge graph already exists at graphify-out/graph.json — skipping build."
+if [ -f "graphify-out/GRAPH_REPORT.md" ]; then
+  echo "[kg] Knowledge graph exists — refreshing with latest changes (incremental)..."
+  if command -v graphify >/dev/null 2>&1; then
+    graphify .
+  else
+    python3 "$(dirname "$0")/build-graph.py" .
+  fi
   exit 0
 fi
 
@@ -13,9 +18,9 @@ fi
 if ! command -v graphify >/dev/null 2>&1; then
   echo "[kg] graphify not found. Installing from PyPI (https://graphify.net)..."
   if command -v pip >/dev/null 2>&1; then
-    pip install graphifyy
+    pip install graphifyy==0.9.16
   elif command -v pip3 >/dev/null 2>&1; then
-    pip3 install graphifyy
+    pip3 install graphifyy==0.9.16
   else
     echo "[kg] pip not available. Falling back to built-in graph builder..." >&2
     if ! command -v python3 >/dev/null 2>&1; then

@@ -1,15 +1,19 @@
 # Knowledge Graph Protocol
 
 Every skill runs this protocol as Step 0 before any other work.
-The goal: understand the project from its knowledge graph before generating anything.
+The goal: understand the project from its knowledge graph — refreshed to the latest code — before generating anything.
 
-Official graphify: https://graphify.net | PyPI package: `pip install graphifyy`
+Official graphify: https://graphify.net | PyPI package: `pip install graphifyy==0.9.16` (pinned — bump deliberately, never install unpinned)
 
 ---
 
 ## Session Cache Rule (check before anything else)
 
 If **Stack Config** and **KG Context** are already loaded in this conversation — because the orchestrator or a previously invoked skill completed Step 0 — **reuse them and skip Steps 0.0–0.3 entirely.** Do not re-read `tech-stack.md`, re-check the graphify install, or re-read `GRAPH_REPORT.md`. Re-run Step 0 only if files were written since the context was loaded and the task depends on seeing them (then re-read only `GRAPH_REPORT.md`, not the install/build steps).
+
+**Greenfield skip:** if the target project has no source files yet (empty repo, docs-only, or brand-new feature dir), skip Steps 0.1–0.3 — there is nothing to graph. Use Stack Config (0.0) alone.
+
+**Consent rule:** never install packages, modify `.gitignore`, or run `graphify claude install` without the user's one-time confirmation (Step 0.1). A declined install is remembered for the rest of the conversation — fall back to Stack Config + marker files and never re-ask.
 
 ---
 
@@ -30,7 +34,7 @@ Stack Config and KG are complementary: Stack Config declares what the team *chos
 
 ---
 
-### Step 0.1 — Ensure graphify is installed
+### Step 0.1 — Ensure graphify is installed (consent-gated)
 
 Use the Bash tool to check:
 
@@ -38,17 +42,23 @@ Use the Bash tool to check:
 command -v graphify
 ```
 
-If graphify is NOT found:
+If graphify is NOT found, **ask the user first** (one-time):
+
+> graphify (knowledge-graph builder) is not installed. Install `graphifyy==0.9.16` (pinned) and wire it into this project? This also adds `graphify-out/` to `.gitignore` and runs `graphify claude install`. (yes / no)
+
+If **yes**:
 
 ```bash
-pip install graphifyy || pip3 install graphifyy
+pip install graphifyy==0.9.16 || pip3 install graphifyy==0.9.16
 ```
 
 Confirm installation succeeded before continuing.
 
+If **no**: skip Steps 0.2–0.3, rely on Stack Config and marker-file inference, and do not ask again this conversation.
+
 ---
 
-### Step 0.2 — Build the knowledge graph if missing
+### Step 0.2 — Build or refresh the knowledge graph
 
 Use the Bash tool to check whether the graph exists:
 
@@ -56,7 +66,13 @@ Use the Bash tool to check whether the graph exists:
 test -f graphify-out/GRAPH_REPORT.md && echo "EXISTS" || echo "MISSING"
 ```
 
-If MISSING:
+If EXISTS — **refresh it before reading** so the report reflects the latest code changes (incremental via the AST cache, typically sub-second):
+
+```bash
+graphify .
+```
+
+If MISSING (first build — consent-gated by Step 0.1):
 
 ```bash
 graphify .

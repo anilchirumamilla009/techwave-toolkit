@@ -1,7 +1,7 @@
 ---
 name: qa
-description: 'Use when the user asks for a "QA plan", "E2E tests", "acceptance tests", "test strategy", "performance testing plan", "load testing", "accessibility testing", "test data strategy", "generate fixtures", or requirement-to-scenario mapping. Covers the test layers above unit/integration — E2E, acceptance, performance, test data — for any project type (web, API, mobile, CLI, library, data/ML).'
-version: 0.7.0
+description: 'Use when the user asks for a "QA plan", "manual test plan", "test plan to verify changes", "E2E tests", "acceptance tests", "test strategy", "performance testing plan", "load testing", "accessibility testing", "test data strategy", or requirement-to-scenario mapping. Covers the layers above unit/integration — manual test plan, E2E, acceptance, performance, test data — for any project type.'
+version: 0.9.0
 user-invocable: true
 ---
 
@@ -10,6 +10,7 @@ user-invocable: true
 ## Overview
 
 This skill produces the testing layers that sit above unit and integration tests, for any project type — web, API, mobile, CLI, library, desktop, data pipeline, ML:
+- **Manual test plan** — a concrete, executable document (numbered steps, real data values, expected results, pass/fail tracking) a human tester follows to verify the change — saved to `docs/`
 - **E2E test stubs** in the framework that fits the project type (see Step 3)
 - **Acceptance scenarios** mapped from requirements to Given/When/Then
 - **Test data strategy** — fixtures, factories, seed scripts
@@ -30,15 +31,17 @@ If `/coding` already ran, this skill detects existing unit and integration test 
 **0.0 Read Stack Config (do this first)**
 Use the Read tool: try `.github/tech-stack.md`, then `.claude/tech-stack.md`. If found, hold as **Stack Config** — use declared stack and test runner in Step 2; skip marker-file detection.
 
-**0.1 Install graphify if missing**
+**0.1 Ensure graphify (consent-gated)**
 ```bash
-command -v graphify || pip install graphifyy || pip3 install graphifyy
+command -v graphify
 ```
+Missing → ask the user once: install `graphifyy==0.9.16` (pinned) and wire it into this project (`.gitignore` entry, `graphify claude install`)? If yes: `pip install graphifyy==0.9.16 || pip3 install graphifyy==0.9.16`. If declined: skip 0.2–0.3, use Stack Config + marker files, do not ask again this conversation.
 
-**0.2 Build the graph if missing**
+**0.2 Build or refresh the graph**
 ```bash
-test -f graphify-out/GRAPH_REPORT.md && echo "EXISTS" || (graphify . && graphify claude install && grep -qF "graphify-out/" .gitignore 2>/dev/null || printf "\n# graphify\ngraphify-out/\n" >> .gitignore)
+if [ -f graphify-out/GRAPH_REPORT.md ]; then graphify .; else graphify . && graphify claude install && { grep -qF "graphify-out/" .gitignore 2>/dev/null || printf "\n# graphify\ngraphify-out/\n" >> .gitignore; }; fi
 ```
+Existing graph → refreshed incrementally (AST cache, sub-second) so 0.3 reads current code. Missing → first build, consent-gated by 0.1.
 
 **0.3 Read the graph**
 Read `graphify-out/GRAPH_REPORT.md`. Extract: existing test files, existing coverage gaps, risk-flagged modules, user-facing flows, any API contract (`openapi.yaml`). Hold as **KG Context**.
@@ -164,7 +167,19 @@ These map requirements → verifiable test conditions. They are distinct from co
 
 ---
 
-## Step 5 — Test Data Strategy
+## Step 5 — Manual Test Plan (verify the change by hand)
+
+**Always produced — this is the deliverable a human tester executes.** Stubs automate journeys; this document verifies the specific change was made correctly, including everything automation can't reach.
+
+1. Load `references/manual-test-plan.md` (template + derivation checklist) — only now, not earlier.
+2. Fill the template scoped to **what changed**: pull the change list from requirements context, `$ARGUMENTS`, or KG Context — not the whole application.
+3. Derive cases with the reference's checklist: happy path per acceptance criterion, boundary values, equivalence classes, negative authorization (wrong role, other user's data), error handling, state transitions, double-submit, and a regression smoke check per adjacent area the change touched.
+4. Every case: concrete data values (never "a valid email"), an observable expected result (what the tester *sees*), a priority (P1/P2/P3), and an **AC Ref** so every acceptance criterion traces to at least one case.
+5. Write to `docs/TEST_PLAN-<kebab-feature>.md`. Report the path, case count, and priority breakdown — do not paste the plan into chat.
+
+---
+
+## Step 6 — Test Data Strategy
 
 Define how test data is created, isolated, and cleaned up:
 
@@ -180,7 +195,7 @@ Generate a stub `e2e/fixtures/` structure and at minimum one factory file matchi
 
 ---
 
-## Step 6 — Performance Plan (if applicable)
+## Step 7 — Performance Plan (if applicable)
 
 Include when: KG Context shows latency-sensitive modules, the contract has high-traffic operations, or Stack Config notes performance requirements. For non-service projects, adapt the targets: pipeline → throughput (rows/sec) and max wall-clock per run; CLI → startup time and large-input handling; library → hot-path benchmarks (criterion, JMH, pytest-benchmark); ML → inference latency and memory.
 
@@ -208,7 +223,7 @@ Skip this section if the feature is low-traffic utility code.
 
 ---
 
-## Step 7 — Accessibility Checklist (if UI exists)
+## Step 8 — Accessibility Checklist (if UI exists)
 
 Include when the project has any user interface — a Frontend section in Stack Config, a mobile app, or a desktop app. Skip entirely for APIs, CLIs, libraries, and pipelines. For mobile, swap axe-core for the platform tooling (Accessibility Scanner on Android, Accessibility Inspector on iOS) — the manual checks below still apply.
 
@@ -234,12 +249,13 @@ Include when the project has any user interface — a Frontend section in Stack 
 
 Produce in this order:
 1. **QA Strategy document** — scope, what coding already covers, what this skill adds
-2. **E2E stubs** (in the Step 3 framework, one file per journey group)
-3. **Acceptance scenarios** (Given/When/Then, plain text)
-4. **Test data files** (`e2e/fixtures/` or equivalent, factory stub)
-5. **Performance plan** (if applicable)
-6. **Accessibility checklist** (if a UI exists)
-7. **Getting started commands** (`npx playwright test`, `maestro test`, `bats tests/`, seed script — whatever matches the framework)
+2. **Manual test plan** — `docs/TEST_PLAN-<feature>.md` (report path + case count, never paste)
+3. **E2E stubs** (in the Step 3 framework, one file per journey group)
+4. **Acceptance scenarios** (Given/When/Then, plain text)
+5. **Test data files** (`e2e/fixtures/` or equivalent, factory stub)
+6. **Performance plan** (if applicable)
+7. **Accessibility checklist** (if a UI exists)
+8. **Getting started commands** (`npx playwright test`, `maestro test`, `bats tests/`, seed script — whatever matches the framework)
 
 ---
 
@@ -247,7 +263,8 @@ Produce in this order:
 
 - Never regenerate unit or integration stubs if coding skill already produced them — note what exists, focus on gaps
 - Write stubs to files and report the file list plus one representative stub — never paste every generated file into chat
-- Load `references/frameworks.md` only when generating stubs, and only once per invocation
+- Manual test plan cases use concrete data values and observable expected results — a stranger must be able to execute them; every acceptance criterion maps to at least one case (AC Ref column)
+- Load `references/frameworks.md` only when generating stubs, and `references/manual-test-plan.md` only at Step 5 — each once per invocation
 - E2E tests cover journeys, not implementation details — no assertions on class names or DOM structure beyond user-visible text and ARIA roles
 - Test names describe the user's observable outcome: "user sees dashboard after login" not "login route returns 200"
 - Acceptance scenarios are in domain language — no code references

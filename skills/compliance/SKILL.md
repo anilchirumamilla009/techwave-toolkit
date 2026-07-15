@@ -1,7 +1,7 @@
 ---
 name: compliance
 description: 'Use for regulatory reviews — "HIPAA compliance", "PCI DSS", "GDPR", "SOC 2", "compliance review", "data privacy check", "security audit", "is this compliant" — or any domain-specific regulatory validation. Pass the domain as an argument: /compliance health | finance | eu | soc2.'
-version: 0.4.0
+version: 0.5.0
 user-invocable: true
 ---
 
@@ -24,15 +24,17 @@ Invoke when the user wants to validate that their code or architecture meets reg
 **0.0 Read Stack Config (do this first)**
 Use the Read tool: try `.github/tech-stack.md`, then `.claude/tech-stack.md`. If found, hold as **Stack Config** — if it declares a `Compliance domain` in the Notes section, use that to route to the correct reference file in Arguments Routing; skip auto-detection.
 
-**0.1 Install graphify if missing**
+**0.1 Ensure graphify (consent-gated)**
 ```bash
-command -v graphify || pip install graphifyy || pip3 install graphifyy
+command -v graphify
 ```
+Missing → ask the user once: install `graphifyy==0.9.16` (pinned) and wire it into this project (`.gitignore` entry, `graphify claude install`)? If yes: `pip install graphifyy==0.9.16 || pip3 install graphifyy==0.9.16`. If declined: skip 0.2–0.3, use Stack Config + marker files, do not ask again this conversation.
 
-**0.2 Build the graph if missing**
+**0.2 Build or refresh the graph**
 ```bash
-test -f graphify-out/GRAPH_REPORT.md && echo "EXISTS" || (graphify . && graphify claude install && grep -qF "graphify-out/" .gitignore 2>/dev/null || printf "\n# graphify\ngraphify-out/\n" >> .gitignore)
+if [ -f graphify-out/GRAPH_REPORT.md ]; then graphify .; else graphify . && graphify claude install && { grep -qF "graphify-out/" .gitignore 2>/dev/null || printf "\n# graphify\ngraphify-out/\n" >> .gitignore; }; fi
 ```
+Existing graph → refreshed incrementally (AST cache, sub-second) so 0.3 reads current code. Missing → first build, consent-gated by 0.1.
 
 **0.3 Read the graph**
 Read `graphify-out/GRAPH_REPORT.md`. Extract: sensitive data flows (auth, payments, patient data), logging patterns, API endpoints handling sensitive data, existing compliance controls. Use this to target the review at real risk areas — do not scan every file when the graph shows you exactly where to look. Hold as **KG Context**.

@@ -2,7 +2,7 @@
 
 A Claude Code plugin providing AI-assisted skills for the development phases of the SDLC. Works with any kind of development — web apps, API services, CLI tools, libraries, mobile and desktop apps, data pipelines, ML projects, infrastructure-as-code — and any stack: Node.js, Python, Go, Java, Rust, .NET, React, Swift, Kotlin, Flutter, and beyond.
 
-**Version:** 0.7.0 · **License:** MIT · **Author:** Venkata Anil Kumar Chirumamilla
+**Version:** 0.8.0 · **License:** MIT · **Author:** Venkata Anil Kumar Chirumamilla
 
 ---
 
@@ -54,7 +54,7 @@ A Claude Code plugin providing AI-assisted skills for the development phases of 
 | `/requirements` | Requirements | User stories, acceptance criteria, BDD scenarios, epic breakdown |
 | `/design` | Architecture | Mermaid diagrams saved to `docs/`, ADRs, tech-stack evaluation |
 | `/coding` | Development | Any project type — single-component, fullstack web, or multi-component with an interface contract |
-| `/qa` | QA Strategy | E2E scenarios in the project type's framework, acceptance mapping, test data, performance plan |
+| `/qa` | QA Strategy | Manual test plan (saved to `docs/`), E2E scenarios in the project type's framework, acceptance mapping, test data, performance plan |
 | `/compliance [domain]` | Compliance | HIPAA, PCI DSS, GDPR, SOC 2 code-level review |
 
 ---
@@ -70,8 +70,8 @@ Everything you need to install, update, manage, and troubleshoot the plugin in o
 | Requirement | Why |
 |---|---|
 | **bash** in `PATH` | Required by the compliance-scan hook |
-| **Python + pip** | Step 0 installs graphify automatically (`pip install graphifyy`) |
-| **jq** *(optional)* | Used by the hook to parse file paths from tool events; falls back gracefully if absent |
+| **Python + pip** | Step 0 offers to install graphify (pinned: `pip install graphifyy==0.9.16`) — always asks once before installing |
+| **jq** *(optional)* | Used by the hook to parse file paths from tool events; falls back to `sed` stdin parsing if absent |
 | **Claude Code CLI** or **GitHub Copilot CLI** | At least one required; both supported simultaneously |
 
 ---
@@ -95,7 +95,7 @@ claude plugin install tw-dev@techwave
 copilot plugin marketplace add anilchirumamilla009/techwave-toolkit
 
 # 2. Install the plugin
-copilot plugin install tw-dev@tw-dev
+copilot plugin install tw-dev@techwave
 ```
 
 > **Marketplace key:** The marketplace is registered under the key `techwave` (not the repo or plugin name). This key is what `@techwave` refers to in install commands.
@@ -167,10 +167,10 @@ If Step 0 fails to install graphify (e.g. `pip` not in `PATH`):
 
 ```bash
 # Try pip3 explicitly
-pip3 install graphifyy
+pip3 install graphifyy==0.9.16
 
 # Or install into a virtualenv and activate it before using Claude Code
-python3 -m venv .venv && source .venv/bin/activate && pip install graphifyy
+python3 -m venv .venv && source .venv/bin/activate && pip install graphifyy==0.9.16
 ```
 
 ---
@@ -260,21 +260,22 @@ Every skill runs a fully automatic **Step 0** before its main logic. No manual s
   │         Not found → ask user when stack is needed
   │
   ├─ 0.1  Is graphify installed?
-  │         NO  → pip install graphifyy
+  │         NO  → asks your permission once, then pip install graphifyy==0.9.16
+  │               (declined → skips the graph, uses tech-stack.md + marker files)
   │         YES → continue
   │
   ├─ 0.2  Does graphify-out/GRAPH_REPORT.md exist?
   │         NO  → graphify .  (builds knowledge graph)
   │              graphify claude install
   │              adds graphify-out/ to .gitignore
-  │         YES → continue
+  │         YES → graphify .  (incremental refresh — graph reflects your latest changes)
   │
   └─ 0.3  Read graphify-out/GRAPH_REPORT.md
             extracts: modules, stack, existing artifacts relevant to this skill
             proceeds with full project context
 ```
 
-From the second invocation onwards, graphify is already installed and the graph already exists — Step 0 completes in under a second.
+From the second invocation onwards, graphify is already installed and the graph is only *refreshed* — the incremental AST cache makes this near-instant, and the report always reflects your latest code instead of a stale snapshot.
 
 **Within a single conversation, Step 0 runs once.** If the orchestrator or a prior skill already loaded Stack Config and KG Context, every later skill reuses them instead of re-reading — an orchestrated 5-phase run reads the graph report once, not five times.
 
@@ -539,6 +540,7 @@ Generates the testing layers that sit above unit and integration stubs. If `/cod
 
 | Output | Description |
 |---|---|
+| **Manual test plan** | `docs/TEST_PLAN-<feature>.md` — concrete step-by-step cases with real data values, expected results, priorities, AC traceability, regression checklist, and sign-off — executable by a human tester with no code access |
 | E2E stubs | One file per journey group, in the project type's framework (see below) |
 | Acceptance scenarios | Given/When/Then in domain language, mapped from requirements |
 | Test data strategy | Fixtures, factory stubs, seed script outline |
@@ -565,6 +567,7 @@ Generates the testing layers that sit above unit and integration stubs. If `/cod
 | Unit test stubs | `/coding` — Unit Test Agent or Backend Test Agent |
 | Route integration stubs | `/coding` — Backend Test Agent |
 | Component + API client tests | `/coding` — UI Test Agent |
+| **Manual test plan (docs/TEST_PLAN-*.md)** | **`/qa`** |
 | **E2E scenarios (project type's framework)** | **`/qa`** |
 | **Acceptance mapping (Given/When/Then)** | **`/qa`** |
 | **Test data strategy** | **`/qa`** |
@@ -659,10 +662,10 @@ The plugin registers a `PostToolUse` hook that runs automatically after every fi
 | Condition | Behavior |
 |---|---|
 | File is clean | Exits silently (exit 0) |
-| Issue detected | Emits a warning to stderr, exits with code 1 |
+| Issue detected | Emits a warning to stderr, exits with code 2 — the warning is fed back to the model so it can fix the file, not just shown to you |
 | Binary file | Skipped automatically |
 | File larger than 500 KB | Skipped (stays within 5-second hook timeout) |
-| `jq` not installed | Falls back to `CLAUDE_TOOL_FILE_PATH` env variable |
+| `jq` not installed | Falls back to `sed` parsing of the hook's stdin JSON |
 
 ### Example warning output
 
@@ -758,6 +761,7 @@ techwave-toolkit/
 │   │   ├── SKILL.md
 │   │   └── references/
 │   │       ├── frameworks.md           # Playwright config, k6 stubs, axe-core integration
+│   │       ├── manual-test-plan.md     # Manual test plan template + case derivation checklist
 │   │       └── test-types.md           # Testing pyramid ownership, E2E patterns, CI assignment
 │   └── compliance/
 │       ├── SKILL.md

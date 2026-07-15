@@ -4,7 +4,7 @@
     "postToolUse": [
       {
         "type": "command",
-        "bash": "${COPILOT_PLUGIN_ROOT}/hooks/compliance-scan.sh",
+        "bash": "bash \"${COPILOT_PLUGIN_ROOT}/hooks/compliance-scan.sh\"",
         "matcher": "write|edit|multiEdit",
         "timeoutSec": 10
       }

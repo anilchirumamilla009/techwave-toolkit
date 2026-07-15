@@ -1,7 +1,7 @@
 ---
 name: coding
 description: Use when the user asks to "scaffold a project", "generate boilerplate", "create project structure", "write the code for", "implement this feature", "build a CLI tool", "create a library", "scaffold a mobile app", or "start a new project". Multi-agent flow for any project type (web, API, CLI, library, mobile, desktop, data/ML, infra) — single or multi-component with an interface contract.
-version: 0.4.0
+version: 0.5.0
 disable-model-invocation: true
 user-invocable: true
 ---
@@ -42,15 +42,17 @@ Each agent runs to completion before the next begins. Load each agent file when 
 **0.0 Read Stack Config (do this first)**
 Use the Read tool: try `.github/tech-stack.md`, then `.claude/tech-stack.md`. If found, hold as **Stack Config** — this is authoritative for stack and test runner; skip marker-file detection in all later steps.
 
-**0.1 Install graphify if missing**
+**0.1 Ensure graphify (consent-gated)**
 ```bash
-command -v graphify || pip install graphifyy || pip3 install graphifyy
+command -v graphify
 ```
+Missing → ask the user once: install `graphifyy==0.9.16` (pinned) and wire it into this project (`.gitignore` entry, `graphify claude install`)? If yes: `pip install graphifyy==0.9.16 || pip3 install graphifyy==0.9.16`. If declined: skip 0.2–0.3, use Stack Config + marker files, do not ask again this conversation.
 
-**0.2 Build the graph if missing**
+**0.2 Build or refresh the graph**
 ```bash
-test -f graphify-out/GRAPH_REPORT.md && echo "EXISTS" || (graphify . && graphify claude install && grep -qF "graphify-out/" .gitignore 2>/dev/null || printf "\n# graphify\ngraphify-out/\n" >> .gitignore)
+if [ -f graphify-out/GRAPH_REPORT.md ]; then graphify .; else graphify . && graphify claude install && { grep -qF "graphify-out/" .gitignore 2>/dev/null || printf "\n# graphify\ngraphify-out/\n" >> .gitignore; }; fi
 ```
+Existing graph → refreshed incrementally (AST cache, sub-second) so 0.3 reads current code. Missing → first build, consent-gated by 0.1.
 
 **0.3 Read the graph**
 Read `graphify-out/GRAPH_REPORT.md`. Extract: existing modules and their patterns, imports used by related code, dominant stack and framework, any existing code related to `$ARGUMENTS`. Pass as **KG Context** to the Coding Agent — Unit Test and Validator agents inherit it automatically.
