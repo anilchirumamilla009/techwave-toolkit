@@ -10,7 +10,7 @@
       "name": "tw-dev",
       "source": ".",
       "description": "Dev-phase SDLC skills for any kind of development: orchestrate, requirements, design, coding (web, API, CLI, library, mobile, data/ML — single or multi-component with interface contracts), QA strategy (E2E/acceptance/performance), and compliance — stack and project-type agnostic",
-      "version": "0.9.1",
+      "version": "0.9.2",
       "category": "development"
     }
   ]
