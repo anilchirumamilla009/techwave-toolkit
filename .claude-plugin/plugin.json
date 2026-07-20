@@ -1,6 +1,6 @@
 {
   "name": "tw-dev",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "description": "Dev-phase SDLC skills for any kind of development: orchestrate, requirements, design, coding (web, API, CLI, library, mobile, data/ML — single or multi-component with interface contracts), QA strategy (E2E/acceptance/performance), and compliance — stack and project-type agnostic",
   "author": {
     "name": "Venkata Anil Kumar Chirumamilla",
@@ -10,6 +10,38 @@
   "homepage": "https://github.com/anilchirumamilla009/techwave-toolkit",
   "keywords": ["sdlc", "orchestrator", "requirements", "design", "coding", "testing", "compliance"],
   "repository": "https://github.com/anilchirumamilla009/techwave-toolkit",
+  "skills": [
+    {
+      "name": "orchestrator",
+      "invoke": "/orchestrator",
+      "description": "Entry point — drives the full SDLC workflow from a Jira ticket, GitHub issue, Confluence page, or plain text requirement"
+    },
+    {
+      "name": "requirements",
+      "invoke": "/requirements",
+      "description": "Write user stories, acceptance criteria, and BDD scenarios"
+    },
+    {
+      "name": "design",
+      "invoke": "/design",
+      "description": "Create HLD, LLD, ADRs, and tech-stack evaluations saved to docs/"
+    },
+    {
+      "name": "coding",
+      "invoke": "/coding",
+      "description": "Generate code and tests for any project type — web, API, CLI, library, mobile, data/ML"
+    },
+    {
+      "name": "qa",
+      "invoke": "/qa",
+      "description": "E2E scenarios, acceptance mapping, test data strategy, and performance plan"
+    },
+    {
+      "name": "compliance",
+      "invoke": "/compliance",
+      "description": "HIPAA, PCI DSS, GDPR, SOC 2 code-level compliance review"
+    }
+  ],
   "mcpServers": {
     "atlassian": {
       "type": "http",

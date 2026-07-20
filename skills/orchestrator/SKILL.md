@@ -1,8 +1,13 @@
 ---
 name: orchestrator
-description: Use when the user says "start sdlc", "kick off development", "run the full pipeline", "orchestrate this feature", "drive development from this ticket", or provides a ticket ID (ABC-123), GitHub issue URL, or Confluence page as the starting point for development.
+description: >
+  Invoke as /orchestrator or /tw-dev:orchestrator. Use when the user says
+  "orchestrator", "start sdlc", "kick off development", "run the full pipeline",
+  "orchestrate this feature", "drive development from this ticket",
+  or provides a ticket ID (ABC-123), GitHub issue URL, or Confluence page
+  as the starting point for development.
 version: 0.5.0
-disable-model-invocation: true
+disable-model-invocation: false
 user-invocable: true
 ---
 
