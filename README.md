@@ -1,881 +1,117 @@
-# tw-dev
+# TechWave Toolkit
 
-A Claude Code plugin providing AI-assisted skills for the development phases of the SDLC. Works with any kind of development — web apps, API services, CLI tools, libraries, mobile and desktop apps, data pipelines, ML projects, infrastructure-as-code — and any stack: Node.js, Python, Go, Java, Rust, .NET, React, Swift, Kotlin, Flutter, and beyond.
+AI-assisted SDLC skills for GitHub Copilot CLI — requirements, design, coding, QA, and compliance, all from a single Copilot session.
 
-**Version:** 0.8.0 · **License:** MIT · **Author:** Venkata Anil Kumar Chirumamilla
+This repository hosts two plugins under the **techwave** marketplace:
 
----
-
-## Table of Contents
-
-- [Overview](#overview)
-- [Setup](#setup)
-  - [Prerequisites](#prerequisites)
-  - [Install](#install)
-  - [Update](#update)
-  - [Manage](#manage)
-  - [Troubleshoot](#troubleshoot)
-- [Tech Stack Config](#tech-stack-config)
-- [Knowledge Graph](#knowledge-graph)
-- [Skills Reference](#skills-reference)
-  - [Orchestrator](#orchestrator--start-here)
-  - [Requirements](#requirements)
-  - [Design](#design)
-  - [Coding](#coding)
-  - [QA Strategy](#qa-strategy)
-  - [Compliance](#compliance)
-- [Hooks and Compliance Scanning](#hooks-and-compliance-scanning)
-- [MCP Server Configuration](#mcp-server-configuration)
-- [Plugin Structure](#plugin-structure)
-- [How Skills Work](#how-skills-work)
-- [Token Efficiency](#token-efficiency)
-- [Contributing](#contributing)
-
----
-
-## Overview
-
-**tw-dev** wraps the development phases of the SDLC into a Claude Code plugin. Instead of juggling separate tools, you drive the full dev workflow — from raw requirements through compliance — from a single Claude Code session.
-
-### What it does
-
-- Converts Jira tickets, Confluence pages, GitHub issues, or plain text into structured requirements
-- Generates architecture diagrams (Mermaid), ADRs, and tech-stack evaluations saved to `docs/`
-- Scaffolds any project type via a multi-agent flow — single component (service, CLI, library, pipeline, mobile app) or multi-component monorepos built from an interface contract (OpenAPI, GraphQL, gRPC, AsyncAPI, or a plain interface doc)
-- Generates E2E scenarios in the framework that fits the project type (Playwright, Maestro, bats, data-quality suites, ...), acceptance mapping, test data strategy, and performance plans
-- Reviews code against HIPAA, PCI DSS v4.0, GDPR, and SOC 2 controls
-- Scans every file write for hardcoded credentials and PII in logs via a background hook
-
-### Skill map
-
-| Command | Phase | Description |
+| Plugin | What it does | Auth |
 |---|---|---|
-| `/orchestrator` | Entry point | Accepts a ticket, page, issue, or plain text — drives all dev phases in sequence |
-| `/requirements` | Requirements | User stories, acceptance criteria, BDD scenarios, epic breakdown |
-| `/design` | Architecture | Mermaid diagrams saved to `docs/`, ADRs, tech-stack evaluation |
-| `/coding` | Development | Any project type — single-component, fullstack web, or multi-component with an interface contract |
-| `/qa` | QA Strategy | Manual test plan (saved to `docs/`), E2E scenarios in the project type's framework, acceptance mapping, test data, performance plan |
-| `/compliance [domain]` | Compliance | HIPAA, PCI DSS, GDPR, SOC 2 code-level review |
+| **`tw-dev`** | All 6 SDLC skills (orchestrator, requirements, design, coding, QA, compliance) | ❌ None |
+| **`tw-atlassian`** | Atlassian MCP — auto-fetch Jira tickets and Confluence pages for `/orchestrator` | ✅ Browser OAuth (optional) |
+
+For full skill documentation see [`plugins/tw-dev/README.md`](plugins/tw-dev/README.md).
 
 ---
 
-## Setup
+## Install
 
-Everything you need to install, update, manage, and troubleshoot the plugin in one place. Commands are identical between the two CLIs — swap `claude` for `copilot` where shown.
-
----
-
-### Prerequisites
-
-| Requirement | Why |
-|---|---|
-| **bash** in `PATH` | Required by the compliance-scan hook |
-| **Python + pip** | Step 0 offers to install graphify (pinned: `pip install graphifyy==0.9.16`) — always asks once before installing |
-| **jq** *(optional)* | Used by the hook to parse file paths from tool events; falls back to `sed` stdin parsing if absent |
-| **Claude Code CLI** or **GitHub Copilot CLI** | At least one required; both supported simultaneously |
-
----
-
-### Install
-
-**Claude Code CLI**
-
+**Step 1 — Register the marketplace** (one-time per machine):
 ```bash
-# 1. Register the GitHub repo as a marketplace (one-time, saved to ~/.claude/settings.json)
-claude plugin marketplace add anilchirumamilla009/techwave-toolkit
-
-# 2. Install the plugin
-claude plugin install tw-dev@techwave
+copilot plugin marketplace add anilchirumamilla009/techwave-toolkit
 ```
 
-**GitHub Copilot CLI**
-
+**Step 2 — Install tw-dev** (SDLC skills — everyone):
 ```bash
-# 1. Register the GitHub repo as a marketplace
-copilot plugin marketplace add anilchirumamilla009/techwave-toolkit
-
-# 2. Install the plugin
 copilot plugin install tw-dev@techwave
 ```
 
-> **Marketplace key:** The marketplace is registered under the key `techwave` (not the repo or plugin name). This key is what `@techwave` refers to in install commands.
+**Step 3 — Install tw-atlassian** (optional — Jira users only):
+```bash
+copilot plugin install tw-atlassian@techwave
+```
+> On first use of `/orchestrator PROJ-123`, your browser opens for Atlassian OAuth login. No API token needed.
 
 ---
 
-### Update
+## Update
+
+> ⚠️ Do **not** use `copilot plugin update` — it fails with a permissions error. Use the sequence below.
 
 ```bash
-# Fetch the latest plugin list from GitHub, then apply the update
-claude plugin marketplace update techwave
-claude plugin update tw-dev
-
-# Copilot CLI — same sequence
+# Update tw-dev
+copilot plugin uninstall tw-dev
 copilot plugin marketplace update techwave
-copilot plugin update tw-dev
+copilot plugin install tw-dev@techwave
+
+# Update tw-atlassian
+copilot plugin uninstall tw-atlassian
+copilot plugin marketplace update techwave
+copilot plugin install tw-atlassian@techwave
 ```
 
 ---
 
-### Manage
+## Uninstall
 
 ```bash
-claude plugin list                          # list all installed plugins
-claude plugin details tw-dev               # show version, skills, and status
-claude plugin disable tw-dev               # disable without uninstalling
-claude plugin enable tw-dev                # re-enable a disabled plugin
-claude plugin uninstall tw-dev             # remove completely
-claude plugin validate .                   # validate plugin structure (run from plugin root)
+# Remove tw-dev only
+copilot plugin uninstall tw-dev
+
+# Remove tw-atlassian only
+copilot plugin uninstall tw-atlassian
+
+# Remove everything including marketplace registration
+copilot plugin uninstall tw-dev
+copilot plugin uninstall tw-atlassian
+copilot plugin marketplace remove techwave
 ```
 
 ---
 
-### Troubleshoot
-
-#### Plugin not found after rename
-
-If you installed an older version of this plugin (previously named `techwave-dev`) and the install or update fails with:
-
-```
-Plugin "tw-dev" not found in marketplace "techwave". Your local copy may be out of date.
-```
-
-Your local marketplace cache still lists the old name. Fix:
+## Verify
 
 ```bash
-# 1. Uninstall the old plugin (skip if not installed)
-claude plugin uninstall techwave-dev
-
-# 2. Refresh the local cache from GitHub
-claude plugin marketplace update techwave
-
-# 3. Install under the new name
-claude plugin install tw-dev@techwave
+copilot plugin list                      # both plugins should appear
+copilot plugin details tw-dev            # shows version + all 6 skills
+copilot plugin details tw-atlassian      # shows version + MCP server status
 ```
 
-#### Marketplace not registered
+---
 
-If you see `Plugin "techwave" not found in any configured marketplace`, the marketplace has not been registered yet. Run the one-time registration first:
+## Available Skills (tw-dev)
 
+| Command | Phase |
+|---|---|
+| `/orchestrator` | Entry point — drives full SDLC from a ticket, issue, or plain text |
+| `/requirements` | User stories, acceptance criteria, BDD scenarios |
+| `/design` | HLD, LLD, ADRs saved to `docs/` |
+| `/coding` | Code + tests for any project type and stack |
+| `/qa` | E2E scenarios, test data strategy, performance plan |
+| `/compliance [domain]` | HIPAA, PCI DSS, GDPR, SOC 2 code-level review |
+
+---
+
+## Troubleshooting
+
+**`copilot plugin update` → "Access denied (os error 5)"**
+Use the [Update](#update) sequence above (uninstall → marketplace update → install).
+
+**Skills not showing after install**
+Reinstall using the Update steps — you may be on an older version.
+
+**"I don't see an orchestrator skill available"**
+Reinstall to get v0.9.1+ which fixes the `disable-model-invocation` flag.
+
+**Marketplace not registered**
+Run `copilot plugin marketplace add anilchirumamilla009/techwave-toolkit` first.
+
+**Atlassian browser login does not open**
 ```bash
-claude plugin marketplace add anilchirumamilla009/techwave-toolkit
-claude plugin install tw-dev@techwave
+copilot plugin uninstall tw-atlassian
+copilot plugin install tw-atlassian@techwave
 ```
-
-#### graphify install fails
-
-If Step 0 fails to install graphify (e.g. `pip` not in `PATH`):
-
-```bash
-# Try pip3 explicitly
-pip3 install graphifyy==0.9.16
-
-# Or install into a virtualenv and activate it before using Claude Code
-python3 -m venv .venv && source .venv/bin/activate && pip install graphifyy==0.9.16
-```
+Then invoke `/orchestrator PROJ-123` — the browser opens on first use.
 
 ---
 
-## Tech Stack Config
-
-Create a single `tech-stack.md` file in your target project's `.github/` folder (or `.claude/`). Every skill reads it automatically at Step 0 — no repeated stack detection, no questions about your framework.
-
-```
-your-project/
-└── .github/
-    └── tech-stack.md    ← checked first
-```
-
-### Format
-
-Each `## <Section>` heading (other than `## Notes`) declares one **component** of your project. Use whatever component names fit — `Frontend`, `Backend`, `Mobile`, `CLI`, `Library`, `Data Pipeline`, `ML`, `Desktop`, `Infrastructure`, anything.
-
-```markdown
-# Tech Stack
-
-## Frontend
-- Framework: React 18 + TypeScript
-- Build tool: Vite
-- Test runner: Vitest + React Testing Library
-- Package manager: pnpm
-
-## Backend
-- Language: Node.js (TypeScript)
-- Framework: Express 4
-- Test runner: Jest + Supertest
-- Package manager: pnpm
-
-## Notes
-- Monorepo tool: pnpm workspaces
-- CI: GitHub Actions
-- Compliance domain: hipaa
-```
-
-A CLI tool, a mobile app + API, or a data pipeline are declared the same way:
-
-```markdown
-# Tech Stack
-
-## CLI
-- Language: Go 1.22
-- Arg parsing: cobra
-- Test runner: testing + testify
-```
-
-Plain markdown — no YAML or strict schema required.
-
-### Mode detection for `/coding`
-
-| `tech-stack.md` content | Mode |
-|---|---|
-| Exactly `## Frontend` + `## Backend` | **Fullstack web** — Contract Agent → UI + Backend Agents |
-| Any other combination of 2+ component sections | **Multi-component** — Contract Agent → Coding + Test Agents per component |
-| One component section | **Single-component** — uses declared stack directly |
-| File not present | Skills ask one plain-English question before proceeding |
-
-### What each skill uses it for
-
-| Skill | How it uses Stack Config |
-|---|---|
-| `/coding` | Reads stack and test runner directly — no file scanning |
-| `/qa` | Picks the right E2E framework and test runner per layer |
-| `/orchestrator` | Populates stack signals and compliance domain in the requirement struct |
-| `/design` | Skips tech-stack-gathering questions — uses declared stack directly |
-| `/compliance` | Reads `Compliance domain:` from Notes — no auto-detection needed |
-
-The `Compliance domain:` note in the `Notes` section (e.g. `hipaa`, `pci`, `gdpr`, `soc2`) tells `/compliance` which standard to check against automatically.
-
----
-
-## Knowledge Graph
-
-Every skill runs a fully automatic **Step 0** before its main logic. No manual setup is needed — invoking any skill for the first time in a project handles everything automatically.
-
-### What happens on first invocation
-
-```
-/coding  (or any skill)
-  │
-  ├─ 0.0  Read .github/tech-stack.md (or .claude/tech-stack.md)
-  │         Found → hold as Stack Config; skip all detection
-  │         Not found → ask user when stack is needed
-  │
-  ├─ 0.1  Is graphify installed?
-  │         NO  → asks your permission once, then pip install graphifyy==0.9.16
-  │               (declined → skips the graph, uses tech-stack.md + marker files)
-  │         YES → continue
-  │
-  ├─ 0.2  Does graphify-out/GRAPH_REPORT.md exist?
-  │         NO  → graphify .  (builds knowledge graph)
-  │              graphify claude install
-  │              adds graphify-out/ to .gitignore
-  │         YES → graphify .  (incremental refresh — graph reflects your latest changes)
-  │
-  └─ 0.3  Read graphify-out/GRAPH_REPORT.md
-            extracts: modules, stack, existing artifacts relevant to this skill
-            proceeds with full project context
-```
-
-From the second invocation onwards, graphify is already installed and the graph is only *refreshed* — the incremental AST cache makes this near-instant, and the report always reflects your latest code instead of a stale snapshot.
-
-**Within a single conversation, Step 0 runs once.** If the orchestrator or a prior skill already loaded Stack Config and KG Context, every later skill reuses them instead of re-reading — an orchestrated 5-phase run reads the graph report once, not five times.
-
-### What graphify produces
-
-| File | Contents |
-|---|---|
-| `graphify-out/GRAPH_REPORT.md` | Human-readable summary — core modules, key entities. Read by every skill. |
-| `graphify-out/graph.json` | Full NetworkX graph — functions, classes, imports, call edges |
-| `graphify-out/graph.html` | Interactive visualization (open in browser) |
-| `graphify-out/cache/` | Incremental AST cache — rebuilt automatically after each commit |
-
-To force a full rebuild at any time: `graphify .`
-
----
-
-## Skills Reference
-
----
-
-## Orchestrator — Start Here
-
-The orchestrator is the single entry point for the full SDLC workflow. Give it any form of requirement and it drives each phase in sequence, asking for your approval at each boundary.
-
-### How to invoke
-
-```
-/orchestrator PROJ-123
-/orchestrator DEV-456
-/orchestrator https://github.com/org/repo/issues/42
-/orchestrator https://wiki.company.com/wiki/spaces/ENG/pages/123456/Feature+Design
-/orchestrator "User Authentication Design"
-/orchestrator Build a JWT authentication module with refresh token support
-/orchestrator <paste full Jira ticket body here>
-```
-
-### Accepted input formats
-
-| Format | Example |
-|---|---|
-| Jira ticket ID | `PROJ-123`, `DEV-456` |
-| Confluence URL | `https://*/wiki/spaces/*/pages/*` |
-| Confluence page title (quoted) | `"User Authentication Design"` |
-| GitHub issue URL | `https://github.com/org/repo/issues/42` |
-| Linear ticket | `ENG-123` (requires Linear MCP) |
-| Plain text | Any feature brief, PRD excerpt, or requirement |
-| Pasted content | Raw Jira/Confluence/GitHub body pasted into chat |
-
-### What happens step by step
-
-**Step 1 — Parse the input.**
-The orchestrator detects the input type and either fetches content via MCP (if a matching MCP server is configured) or asks you to paste the content. It normalises the input into a structured requirement struct and asks for your confirmation before proceeding.
-
-**Step 2 — Detect what already exists.**
-The orchestrator scans the project for existing artefacts (source directories, test files, design docs) and skips phases whose outputs are already present.
-
-**Step 3 — Propose the sequence.**
-Based on what exists, it proposes only the missing phases:
-
-```
-New feature:           /requirements → /design → /coding → /qa → /compliance
-Code exists, no tests: /qa → /compliance
-Bug ticket:            /requirements (bug story) → /coding → /qa
-```
-
-**Step 4 — Drive each phase.**
-For each phase: announces start → invokes the skill with full requirement context → shows a brief summary → asks `Continue to Phase N+1? (yes / skip / stop)`.
-
-**Step 5 — Final summary.**
-Prints a completion table listing completed phases, what was produced, and suggested next steps.
-
-### Key rules
-
-- The orchestrator never generates artefacts itself — it coordinates skills; they produce outputs.
-- It always confirms the parsed requirement before starting any phase.
-- It always asks `Continue?` between phases — it never skips silently.
-- Context (title, domain, stack signals) is carried forward to every skill so output is coherent across phases.
-
----
-
-## Requirements
-
-Transforms raw ideas, features, or epics into structured, behavior-first requirements artefacts.
-
-### How to invoke
-
-```
-/requirements write user stories for a user login feature
-/requirements break down the epic: "User Profile Management"
-/requirements define acceptance criteria for the checkout flow
-/requirements write BDD scenarios for password reset
-/requirements capture requirements for real-time notifications
-```
-
-### What it produces
-
-1. **Epic statement** (if applicable)
-2. **User stories** in As a / I want / So that format
-3. **Acceptance criteria** — testable Given/When/Then bullets for each story
-4. **BDD scenarios** (when the feature has complex branching)
-5. **Technical Notes** — constraints the dev team needs (never implementation choices)
-6. **Out of Scope** — explicit list of what this story does NOT cover
-
-### Story sizing
-
-| Size | Effort |
-|---|---|
-| XS | Less than 1 day |
-| S | 1–2 days |
-| M | 3–5 days |
-| L | 1–2 weeks — flag for breakdown |
-
-### Key rules
-
-- Stories describe observable outcomes, not database tables or API calls.
-- Acceptance criteria must be verifiable true/false by a QA engineer.
-- Implementation details go in Technical Notes only — never in story body.
-- When input is incomplete, drafts requirements using `[Assumed]` tags, then asks one consolidating question.
-
----
-
-## Design
-
-Produces text-based system design artefacts: architecture diagrams, ADRs, tech-stack evaluations, and component designs.
-
-### How to invoke
-
-```
-/design create a C4 container diagram for a payments service
-/design write an ADR for choosing PostgreSQL over MongoDB
-/design recommend a tech stack for a real-time chat app
-/design draw a sequence diagram for the order checkout flow
-/design create an ER diagram for the user management module
-/design design the system for a healthcare data ingestion pipeline
-```
-
-### Artifact type routing and output location
-
-| User says | Artifact | Saved to |
-|---|---|---|
-| "HLD", "high-level design", "system design" | C4 Context + Container + narrative | `docs/HLD.md` |
-| "LLD", "low-level design", "component diagram" | Component / class / sequence + API contracts | `docs/LLD.md` |
-| "sequence diagram", "flow" | Mermaid `sequenceDiagram` | `docs/LLD.md` |
-| "ER diagram", "data model" | Mermaid `erDiagram` | `docs/LLD.md` |
-| "ADR", "architecture decision" | Nygard ADR | `docs/ADR-NNN-<title>.md` |
-| "tech stack", "which technology" | Evaluation matrix + recommendation | inline only |
-
-### Key rules
-
-- Always write HLD and LLD to `docs/` — never leave design artifacts in chat only.
-- Confirm planned file paths with the user before writing anything.
-- Diagrams are Mermaid text only — renders on GitHub, Notion, and most editors.
-- ADR filenames are auto-incremented (`ADR-001`, `ADR-002`, ...).
-
----
-
-## Coding
-
-Drives a multi-agent sequential flow from stack detection through validation, for any kind of project — web, API, CLI, library, mobile, desktop, data/ML, infrastructure. The mode is determined automatically from `tech-stack.md`.
-
-### How to invoke
-
-```
-/coding        # reads tech-stack.md — single-component, fullstack web, or multi-component
-```
-
-If no `tech-stack.md` is present, the skill asks one question: what to build and with what stack.
-
-### Supported stacks
-
-Detailed scaffold references ship for: Node.js + TypeScript · Python + FastAPI · Go + Gin · Java + Spring Boot · Rust + Axum · .NET 8 + ASP.NET Core · React + Vite · Next.js · Vue · SvelteKit
-
-**Any other stack works too** (Swift, Kotlin, Flutter, PHP, Ruby, Elixir, C++, Terraform, ...) — the agents follow a generic protocol (`references/stacks/generic.md`): the ecosystem's canonical layout, standard build tooling, and de-facto test framework.
-
-### Single-component mode
-
-Triggered when `tech-stack.md` has exactly one component section — a service, CLI, library, mobile app, pipeline, or anything else.
-
-```
-[Coding Agent] → [Unit Test Agent] → [Validator Agent]
-```
-
-1. **Coding Agent** — reads Stack Config, confirms the planned directory tree, then writes all application code
-2. **Unit Test Agent** — reads the generated code, selects the idiomatic test framework from Stack Config, writes test stubs with coverage targets (90%+ auth/payments, 80%+ APIs)
-3. **Validator Agent** — pass/fail verdict across Correctness, Security, and Test Quality
-
-### Fullstack web mode
-
-Triggered when `tech-stack.md` has exactly `## Frontend` and `## Backend` sections. Both frontend and backend code are placed under the **same parent repository** as a monorepo.
-
-```
-[Contract Agent]
-       │
-       ├─ establishes monorepo structure (frontend/ + backend/ + docs/ + docker-compose.yml)
-       └─ writes docs/openapi.yaml after user confirms the contract
-              │
-   ┌──────────┴──────────┐
-   │                     │
-[UI Coding Agent]   [Backend Coding Agent]
-frontend/           backend/
-       │                     │
-[UI Test Agent]     [Backend Test Agent]
-       └──────────┬──────────┘
-                  │
-          [Validator Agent]
-          (checks both layers + contract conformance)
-```
-
-**Contract Agent** — proposes the monorepo directory layout, then drafts `openapi.yaml`. Waits for explicit user confirmation before writing any file.
-
-**UI Coding Agent** — reads `openapi.yaml`, writes all frontend code under `frontend/`. Generates a typed API client (one function per `operationId`), components, pages, and routing.
-
-**Backend Coding Agent** — reads `openapi.yaml`, writes all backend code under `backend/`. Generates route handlers for every path in the spec, middleware, and a service layer.
-
-**UI / Backend Test Agents** — each reads their layer's generated code and the Stack Config `Test runner:` line. Generates component tests + API client tests (UI) and route integration tests + service unit tests (Backend).
-
-**Validator Agent** — reviews both layers and checks contract conformance (every `operationId` in the spec must have a backend handler and a frontend client function).
-
-### Multi-component mode
-
-Triggered by any other combination of 2+ component sections — e.g. `## Mobile` + `## Backend`, `## CLI` + `## Library`, `## Data Pipeline` + `## Backend`.
-
-```
-[Contract Agent]
-       │
-       ├─ establishes the monorepo layout (one directory per component)
-       └─ writes the interface contract matching how the components talk:
-          REST → docs/openapi.yaml · GraphQL → docs/schema.graphql
-          gRPC → proto/*.proto · events → docs/asyncapi.yaml
-          in-process or data handoff → docs/CONTRACT.md
-              │
-   for each component, providers before consumers:
-   [Coding Agent] → [Unit Test Agent]
-              │
-       [Validator Agent]
-       (checks every component + contract conformance)
-```
-
-### Key rules
-
-- No agent writes any file until it receives explicit user confirmation for its own planning step
-- Confirmation gates: monorepo structure → interface contract → code structure per component
-- Hardcoded secrets are always HIGH severity in the Validator report
-- Generated code is immediately runnable — no `TODO` in production code paths
-
----
-
-## QA Strategy
-
-Generates the testing layers that sit above unit and integration stubs. If `/coding` has already run, `/qa` detects existing test files and focuses only on what is missing.
-
-### How to invoke
-
-```
-/qa checkout flow       # E2E scenarios for a specific feature
-/qa login feature       # acceptance scenarios + Playwright stubs
-/qa payments API        # E2E + performance plan for a critical path
-/qa                     # full QA strategy for the current codebase
-```
-
-### What it produces
-
-| Output | Description |
-|---|---|
-| **Manual test plan** | `docs/TEST_PLAN-<feature>.md` — concrete step-by-step cases with real data values, expected results, priorities, AC traceability, regression checklist, and sign-off — executable by a human tester with no code access |
-| E2E stubs | One file per journey group, in the project type's framework (see below) |
-| Acceptance scenarios | Given/When/Then in domain language, mapped from requirements |
-| Test data strategy | Fixtures, factory stubs, seed script outline |
-| Performance plan | k6/Locust/Artillery scenarios + latency/throughput targets (or benchmarks/throughput for CLIs, libraries, pipelines) |
-| Accessibility checklist | WCAG 2.1 AA automated + manual checks — when the project has a UI |
-| QA strategy document | Full test pyramid for this feature, CI stage assignment |
-
-### E2E framework by project type
-
-| Project type | Framework |
-|---|---|
-| Web frontend | Playwright (or Cypress) |
-| API only | Supertest / httpx at the API boundary |
-| Mobile | Maestro · Detox · XCUITest · Espresso |
-| CLI tool | bats or subprocess tests — exit codes, stdout/stderr, produced files |
-| Desktop | Playwright (Electron/Tauri) or platform driver |
-| Library / SDK | Consumer-perspective example project |
-| Data pipeline / ML | Full-run fixture tests + data-quality suites / evaluation harness |
-
-### Division of labour with `/coding`
-
-| Layer | Generated by |
-|---|---|
-| Unit test stubs | `/coding` — Unit Test Agent or Backend Test Agent |
-| Route integration stubs | `/coding` — Backend Test Agent |
-| Component + API client tests | `/coding` — UI Test Agent |
-| **Manual test plan (docs/TEST_PLAN-*.md)** | **`/qa`** |
-| **E2E scenarios (project type's framework)** | **`/qa`** |
-| **Acceptance mapping (Given/When/Then)** | **`/qa`** |
-| **Test data strategy** | **`/qa`** |
-| **Performance plan** | **`/qa`** |
-| **Accessibility checklist** | **`/qa`** |
-
-### E2E journey selection
-
-Always included: authentication, primary value action, payment/subscription flow (if applicable).
-Included when relevant: data creation/deletion, admin or privileged actions, data export/import.
-
-### Key rules
-
-- Never regenerates unit or integration stubs when `/coding` already produced them
-- E2E test names describe the user's observable outcome — no implementation references
-- Acceptance scenarios are in domain language — no code, no class names
-- Test data factories generate unique data per test run — no shared mutable state
-
----
-
-## Compliance
-
-Reviews a codebase against domain-specific regulatory requirements and produces a structured pass/fail checklist with code-level remediation guidance.
-
-### How to invoke
-
-```
-/compliance health      # HIPAA technical safeguards review
-/compliance finance     # PCI DSS v4.0 code controls
-/compliance eu          # GDPR consent, erasure, portability
-/compliance soc2        # SOC 2 CC6/7/8 controls
-/compliance             # auto-detects domain from codebase signals
-```
-
-### Domain routing
-
-| Arguments | Standard | Reference |
-|---|---|---|
-| `health`, `hipaa`, `healthcare`, `phi`, `medical` | HIPAA 45 CFR 164.312 | `references/hipaa.md` |
-| `finance`, `pci`, `pci-dss`, `payment`, `fintech`, `card` | PCI DSS v4.0 | `references/pci-dss.md` |
-| `eu`, `gdpr`, `privacy`, `europe`, `personal-data` | GDPR | `references/gdpr.md` |
-| `general`, `soc2`, `soc`, `cloud`, `startup`, `saas` | SOC 2 | `references/soc2.md` |
-
-If `Compliance domain:` is declared in `tech-stack.md` Notes, that domain is used directly — no auto-detection needed.
-
-### Compliance report structure
-
-```
-## Compliance Review: [Domain] ([Standard])
-
-### Summary
-  Total controls reviewed: N  |  Passing: N ✓  |  Failing: N ✗
-
-### Control Checklist
-
-| Control | Status | Evidence / Location |
-|---|---|---|
-| Encrypt data at rest | ✓ Pass   | src/db/config.ts:42 |
-| No hardcoded credentials | ✗ Fail   | src/auth/service.ts:17 |
-| MFA for admin access | ⚠ Manual | needs runtime verification |
-
-### Remediation Guidance
-
-#### [Failing Control]
-Issue: [what is wrong and why it violates the standard]
-Fix:   [specific before/after code pattern]
-Effort: Low / Medium / High
-```
-
-### Key rules
-
-- A control is only marked Pass when specific code evidence (file and line) is cited.
-- Controls requiring runtime or infrastructure verification are marked Manual — not Pass.
-- All findings are engineering recommendations — never legal advice.
-
----
-
-## Hooks and Compliance Scanning
-
-The plugin registers a `PostToolUse` hook that runs automatically after every file write. The hook scans the modified file for security and compliance issues.
-
-### What the hook scans for
-
-| Pattern | Example |
-|---|---|
-| Hardcoded credentials | `password = "mysecret"`, `api_key: "abc123"` |
-| PII passed to logging | `console.log(user.ssn)`, `print(f"DOB: {date_of_birth}")` |
-| Embedded cloud access keys | AWS `AKIA...` format key IDs |
-
-### Hook behavior
-
-| Condition | Behavior |
-|---|---|
-| File is clean | Exits silently (exit 0) |
-| Issue detected | Emits a warning to stderr, exits with code 2 — the warning is fed back to the model so it can fix the file, not just shown to you |
-| Binary file | Skipped automatically |
-| File larger than 500 KB | Skipped (stays within 5-second hook timeout) |
-| `jq` not installed | Falls back to `sed` parsing of the hook's stdin JSON |
-
-### Example warning output
-
-```
-[tw-dev] WARNING: Possible hardcoded credential detected in src/config.ts. Use environment variables or a secrets manager instead.
-[tw-dev] WARNING: Possible PII in log statement detected in src/service/user.ts. Remove PII from logs or use pseudonymization.
-[tw-dev] WARNING: Possible AWS Access Key ID detected in scripts/deploy.sh. Revoke and rotate this key immediately.
-```
-
----
-
-## MCP Server Configuration
-
-The `/orchestrator` skill auto-fetches ticket and page content when a matching MCP server is connected. Without an MCP server, it falls back to asking you to paste the content.
-
-### Jira
-
-```bash
-claude mcp add --transport http jira https://your-jira-mcp-url
-```
-
-### Confluence
-
-```bash
-claude mcp add --transport http confluence https://your-confluence-mcp-url
-```
-
-### GitHub
-
-```bash
-claude mcp add --transport http github https://api.githubcopilot.com/mcp/v1
-```
-
-### Linear
-
-```bash
-claude mcp add --transport http linear https://your-linear-mcp-url
-```
-
-The orchestrator tries multiple tool name variants for each source (e.g. `mcp__jira__getIssue`, `mcp__jira__get_issue`). If no MCP is detected, it always provides a paste fallback — it never aborts.
-
----
-
-## Plugin Structure
-
-```
-techwave-toolkit/
-├── .claude-plugin/
-│   ├── plugin.json                     # Plugin manifest (name: tw-dev, version, author)
-│   └── marketplace.json                # Marketplace listing
-├── .github/
-│   └── copilot-instructions.md         # GitHub Copilot CLI context
-├── skills/
-│   ├── shared/
-│   │   └── knowledge-graph.md          # Step 0 protocol shared by all skills
-│   ├── orchestrator/
-│   │   ├── SKILL.md
-│   │   └── references/
-│   │       └── mcp-sources.md          # Known MCP tool name variants per source
-│   ├── requirements/
-│   │   ├── SKILL.md
-│   │   └── references/
-│   │       ├── story-templates.md      # User story + Jira/Linear field templates
-│   │       └── bdd-patterns.md         # Idiomatic Given/When/Then patterns by domain
-│   ├── design/
-│   │   ├── SKILL.md
-│   │   └── references/
-│   │       ├── adr-template.md         # Nygard ADR format with worked examples
-│   │       ├── diagram-formats.md      # Mermaid syntax starters per diagram type
-│   │       └── tech-stack-evaluation.md # Scoring matrix — backend, DB, frontend, deploy
-│   ├── coding/
-│   │   ├── SKILL.md                    # Mode detection + agent execution order
-│   │   ├── agents/
-│   │   │   ├── coding-agent.md         # Single/multi-component: reads Stack Config, writes code for any project type
-│   │   │   ├── test-agent.md           # Single/multi-component: writes unit test stubs
-│   │   │   ├── contract-agent.md       # Fullstack/multi-component: monorepo structure + interface contract
-│   │   │   ├── ui-coding-agent.md      # Fullstack web: generates frontend/ from openapi.yaml
-│   │   │   ├── backend-coding-agent.md # Fullstack web: generates backend/ from openapi.yaml
-│   │   │   ├── ui-test-agent.md        # Fullstack web: component + API client tests
-│   │   │   ├── backend-test-agent.md   # Fullstack web: route integration + service unit tests
-│   │   │   └── validator-agent.md      # All modes: correctness / security / test quality verdict
-│   │   └── references/
-│   │       └── stacks/
-│   │           ├── generic.md          # Protocol for any stack without a dedicated reference
-│   │           ├── nodejs.md           # Node.js + TypeScript + Express scaffold
-│   │           ├── python.md           # Python + FastAPI + Poetry scaffold
-│   │           ├── go.md               # Go + Gin scaffold
-│   │           ├── java.md             # Java + Spring Boot scaffold
-│   │           ├── react.md            # React + Vite + TypeScript scaffold
-│   │           ├── rust.md             # Rust + Axum scaffold
-│   │           └── dotnet.md           # .NET 8 + ASP.NET Core Web API scaffold
-│   ├── qa/
-│   │   ├── SKILL.md
-│   │   └── references/
-│   │       ├── frameworks.md           # Playwright config, k6 stubs, axe-core integration
-│   │       ├── manual-test-plan.md     # Manual test plan template + case derivation checklist
-│   │       └── test-types.md           # Testing pyramid ownership, E2E patterns, CI assignment
-│   └── compliance/
-│       ├── SKILL.md
-│       └── references/
-│           ├── hipaa.md                # HIPAA 45 CFR 164.312 code controls
-│           ├── pci-dss.md              # PCI DSS v4.0 code controls
-│           ├── gdpr.md                 # GDPR consent, erasure, portability controls
-│           └── soc2.md                 # SOC 2 CC6/7/8 controls
-├── hooks/
-│   ├── hooks.json                      # Registers PostToolUse compliance-scan hook
-│   └── compliance-scan.sh              # Scans file writes for hardcoded secrets + PII in logs
-└── scripts/
-    ├── setup-kg.sh
-    ├── query-kg.sh
-    └── build-graph.py
-```
-
----
-
-## How Skills Work
-
-Each skill is a `SKILL.md` file with a YAML frontmatter block. The same file works for both CLIs:
-
-```yaml
----
-name: coding
-description: <trigger phrases>
-version: 0.3.0
-disable-model-invocation: true   # Claude Code: prevents auto-invocation
-user-invocable: true             # Copilot CLI: enables /coding slash command
----
-```
-
-| Frontmatter field | Claude Code | Copilot CLI |
-|---|---|---|
-| `name` | skill identifier | skill identifier |
-| `description` | trigger phrase matching | trigger phrase matching |
-| `version` | update detection | update detection |
-| `disable-model-invocation: true` | blocks auto-invocation | ignored |
-| `user-invocable: true` | ignored | enables `/skill-name` command |
-
-### Execution order
-
-Every skill follows this order regardless of which CLI is used:
-
-1. **Step 0** — read `tech-stack.md` (if present), install graphify, build graph, read `GRAPH_REPORT.md`
-2. **Skill logic** — generates output informed by real project knowledge
-
-### Progressive disclosure
-
-1. **`SKILL.md`** — core instructions, always loaded on invocation
-2. **`references/*.md`** — dense domain knowledge (templates, code patterns, checklists), loaded on-demand
-
-### Hooks
-
-Both CLIs fire the compliance-scan hook after every file write:
-
-| File | Used by |
-|---|---|
-| `hooks/hooks.json` | Claude Code |
-| `hooks/copilot-hooks.json` | GitHub Copilot CLI |
-
----
-
-## Token Efficiency
-
-The plugin is designed so context cost stays proportional to the work actually done. The load hierarchy, cheapest to most expensive:
-
-| Layer | When it costs tokens |
-|---|---|
-| Frontmatter `description` | Every session — kept short and trigger-dense on purpose |
-| `SKILL.md` body | Only when the skill is invoked |
-| `agents/*.md` | Only when that agent's phase starts — one at a time, never preloaded |
-| `references/*.md` | Only on demand — one matching stack file, one compliance domain, never speculative |
-
-Rules the skills follow at runtime:
-
-- **Step 0 runs once per conversation.** Stack Config and KG Context are reused by every later skill — the orchestrator's 5-phase run pays for the graph read once. `GRAPH_REPORT.md` is read selectively, not in full, when large.
-- **Generated files are never echoed into chat.** Agents report trees, counts, and decisions; large contract drafts are confirmed via a condensed operation table (full draft on request).
-- **Findings cite `file:line`, not code blocks.** Validator and compliance reviews quote at most the offending line.
-- **Bulk generation can run in a subagent** (Claude Code): after the user confirms a component's structure, file-writing churn happens in an isolated context and only the summary returns to the conversation.
-
-### Checklist for new custom skills/agents
-
-If you add your own skill or agent to this plugin, keep it on the same budget:
-
-- [ ] `description` under ~60 words — it loads in every session
-- [ ] Dense domain knowledge goes in `references/`, loaded on demand — not in `SKILL.md`
-- [ ] Honor the Step 0 session-cache rule (`skills/shared/knowledge-graph.md`) instead of re-running detection
-- [ ] Report written files by name — never paste their contents back into chat
-- [ ] Load at most one reference variant per invocation (one stack, one domain, one framework)
-
----
-
-## Contributing
-
-1. Fork this repository.
-2. Add or update a skill in `skills/<skill-name>/SKILL.md`.
-3. Validate: `claude plugin validate .` (run from the plugin root).
-4. Test: `claude plugin install --plugin-dir .` then invoke the skill.
-5. Submit a pull request.
-
-### Skill quality checklist
-
-- [ ] `description` has 6–10 distinct trigger phrases covering common user phrasings — and stays under ~60 words (it loads in every session)
-- [ ] `SKILL.md` has a clear, numbered step-by-step process section
-- [ ] File-writing skills have `disable-model-invocation: true` in frontmatter
-- [ ] Reference files contain concrete examples — not prose summaries
-- [ ] The skill asks the user rather than guessing when context is ambiguous
-- [ ] The skill meets the [Token Efficiency](#token-efficiency) checklist
-- [ ] `claude plugin validate .` passes before submitting
-
----
-
-## License
-
-MIT — free to use, modify, and distribute within your team.
+**License:** MIT · **Author:** Venkata Anil Kumar Chirumamilla
