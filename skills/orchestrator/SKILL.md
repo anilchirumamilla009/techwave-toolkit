@@ -95,44 +95,72 @@ Ask the user: "I've parsed your input as: [show struct]. Is this correct? Any co
 
 ## MCP Detection
 
-Before fetching, check which MCP tools are available in the current session:
+Before fetching, check which MCP tools are available in the current session.
+Full tool name reference: `references/mcp-sources.md`
 
-### Jira
-Look for any of: `mcp__jira__getIssue`, `mcp__jira__get_issue`, `mcp__jira__fetchTicket`, `mcp__jira__getTicket`
+### Jira / Atlassian
 
-If found:
+**Detection — check in this order:**
+1. `mcp__atlassian__get_issue` ← Atlassian official Remote MCP (preferred)
+2. `mcp__jira__getIssue` or `mcp__jira__get_issue` ← legacy server name
+3. `mcp__atlassian-jira__getIssue` or `mcp__jira-cloud__getIssue` ← alternate names
+
+**If any found — fetch and extract:**
 ```
-Call: mcp__jira__getIssue({ issueKey: "<TICKET-ID>" })
-Extract: summary, description, acceptance criteria, labels, components
+Call: mcp__atlassian__get_issue({ issueKey: "<TICKET-ID>" })
+       OR the first matching tool name from the detection order above
+
+Extract from response:
+  summary      → fields.summary
+  description  → fields.description
+                 NOTE: Atlassian returns description in ADF (Atlassian Document Format)
+                 — a nested JSON, not a plain string. Extract text from:
+                 fields.description.content[*].content[*].text (recursive)
+                 Fall back to fields.description if it is already a plain string.
+  type         → fields.issuetype.name  (Story → feature, Bug → bug, Task → task, Epic → epic)
+  status       → fields.status.name
+  labels       → fields.labels
+  components   → fields.components[*].name
+  acceptance   → look in order:
+                 1. fields.customfield_10016
+                 2. any fields.customfield_* whose key contains "acceptance"
+                 3. a section labelled "Acceptance Criteria" or "AC:" in description
+  comments     → fields.comment.comments[*].body (latest 3 only — do not load all)
 ```
 
-If not found → prompt:
+**If not found → prompt:**
 ```
-No Jira MCP detected. Either:
-  1. Paste the ticket content here, or
-  2. Add a Jira MCP server: claude mcp add --transport http jira https://your-jira-mcp-url
+No Atlassian MCP detected. Either:
+  1. Paste the ticket content here and I'll proceed from that, or
+  2. Set up the Atlassian MCP server — see docs/mcp-setup.md for step-by-step instructions.
+     Quick setup: copilot mcp add atlassian --transport http https://mcp.atlassian.com/v1/mcp
 ```
 
 ### Confluence
-Look for any of: `mcp__confluence__getPage`, `mcp__confluence__get_page`, `mcp__confluence__fetchPage`
 
-If found and input is a URL → extract page ID from URL → call MCP.
+**Detection — check in this order:**
+1. `mcp__atlassian__get_confluence_page_content` ← Atlassian official Remote MCP (preferred)
+2. `mcp__atlassian__search_confluence` ← for title-based lookup
+3. `mcp__confluence__getPage` or `mcp__confluence__get_page` ← legacy
+4. `mcp__confluence__searchPages` or `mcp__confluence__search` ← legacy search
+
+If found and input is a URL → extract page ID from URL → call fetch tool.
 If found and input is a title → call search tool, pick top result.
 If not found → prompt to paste content.
 
 ### GitHub Issues
+
 Look for any of: `mcp__github__getIssue`, `mcp__github__get_issue`
 
 If found → extract owner/repo/number from URL → call MCP.
 If not found → prompt to paste content.
 
 ### Linear
+
 Look for any of: `mcp__linear__getIssue`, `mcp__linear__get_issue`
 
 If found → call with ticket ID.
 If not found → prompt to paste content.
-
-Reference `references/mcp-sources.md` for the full list of known MCP tool signatures.
 
 ---
 
