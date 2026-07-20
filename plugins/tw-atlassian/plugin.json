@@ -1,0 +1,22 @@
+{
+  "name": "tw-atlassian",
+  "version": "1.0.0",
+  "description": "Atlassian MCP integration for the TechWave toolkit. Connects Jira and Confluence to the tw-dev orchestrator — install this plugin if you want /orchestrator to auto-fetch Jira tickets. Uses OAuth browser authentication; no API tokens needed.",
+  "author": {
+    "name": "Venkata Anil Kumar Chirumamilla",
+    "email": "anil.chirumamilla@techwave.com"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/anilchirumamilla009/techwave-toolkit",
+  "keywords": ["atlassian", "jira", "confluence", "mcp", "sdlc"],
+  "repository": "https://github.com/anilchirumamilla009/techwave-toolkit",
+  "mcpServers": {
+    "atlassian": {
+      "type": "http",
+      "url": "https://mcp.atlassian.com/v1/mcp",
+      "description": "Atlassian Remote MCP — Jira ticket fetch, JQL search, Confluence page fetch. Authenticates via browser OAuth — no API token or environment variables needed.",
+      "required": true,
+      "setupDoc": "docs/mcp-setup.md"
+    }
+  }
+}

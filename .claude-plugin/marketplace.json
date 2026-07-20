@@ -10,8 +10,15 @@
       "name": "tw-dev",
       "source": ".",
       "description": "Dev-phase SDLC skills for any kind of development: orchestrate, requirements, design, coding (web, API, CLI, library, mobile, data/ML — single or multi-component with interface contracts), QA strategy (E2E/acceptance/performance), and compliance — stack and project-type agnostic",
-      "version": "0.9.2",
+      "version": "0.9.3",
       "category": "development"
+    },
+    {
+      "name": "tw-atlassian",
+      "source": "plugins/tw-atlassian",
+      "description": "Atlassian MCP integration — connects Jira and Confluence to the tw-dev orchestrator via OAuth browser login. Install separately; no authentication is forced on tw-dev users.",
+      "version": "1.0.0",
+      "category": "integration"
     }
   ]
 }
