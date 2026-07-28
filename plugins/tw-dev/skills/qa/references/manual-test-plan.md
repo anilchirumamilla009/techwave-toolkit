@@ -1,6 +1,6 @@
 # Manual Test Plan — Template & Derivation Rules
 
-The manual test plan is a standalone document a human tester executes to verify the change — no code required. Save to `docs/TEST_PLAN-<kebab-feature>.md`. Every case must be executable by someone who did not write the code.
+The manual test plan is a standalone document a human tester executes to verify the change — no code required. Save to `docs/TEST_PLAN-<kebab-feature>.md`, and export the cases to `docs/TEST_PLAN-<kebab-feature>.csv` (spec below). Every case must be executable by someone who did not write the code.
 
 ---
 
@@ -61,6 +61,31 @@ The manual test plan is a standalone document a human tester executes to verify 
 
 | Role | Name | Verdict (Ship / Block) | Date |
 |---|---|---|---|
+```
+
+---
+
+## CSV Export
+
+Write the same cases to `docs/TEST_PLAN-<kebab-feature>.csv` — a flat sheet the team can import into Excel, Jira/Zephyr, or TestRail and keep as an execution record. Generate it from the finished plan so the two files never disagree.
+
+**Header (exact order):**
+
+```csv
+ID,Type,Priority,Area,Title,Precondition,Steps,Expected Result,AC Ref,Status,Notes
+```
+
+- One row per test case (`Type=Test`) and one per regression check (`Type=Regression`, Priority `P2`, quick check in Steps).
+- **RFC 4180 quoting**: wrap any field containing a comma, quote, or newline in double quotes; double embedded quotes. Steps stay numbered inside one quoted field, separated by newlines.
+- `Status` and `Notes` are left empty — the tester fills them during execution.
+- `Area` = the functional-area heading the case sits under in the `.md` plan.
+
+Example row:
+
+```csv
+TC-001,Test,P1,Login,"User sees dashboard after valid login","Account test-042@example.com exists","1. Open /login
+2. Enter test-042@example.com and Passw0rd!x
+3. Click ""Sign in""","Dashboard page loads showing the user's name in the header",AC-1,,
 ```
 
 ---

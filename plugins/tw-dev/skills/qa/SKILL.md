@@ -1,7 +1,7 @@
 ---
 name: qa
 description: 'Use when the user asks for a "QA plan", "manual test plan", "test plan to verify changes", "E2E tests", "acceptance tests", "test strategy", "performance testing plan", "load testing", "accessibility testing", "test data strategy", or requirement-to-scenario mapping. Covers the layers above unit/integration — manual test plan, E2E, acceptance, performance, test data — for any project type.'
-version: 0.9.0
+version: 0.10.0
 user-invocable: true
 ---
 
@@ -10,7 +10,7 @@ user-invocable: true
 ## Overview
 
 This skill produces the testing layers that sit above unit and integration tests, for any project type — web, API, mobile, CLI, library, desktop, data pipeline, ML:
-- **Manual test plan** — a concrete, executable document (numbered steps, real data values, expected results, pass/fail tracking) a human tester follows to verify the change — saved to `docs/`
+- **Manual test plan** — a concrete, executable document (numbered steps, real data values, expected results, pass/fail tracking) a human tester follows to verify the change — saved to `docs/`, plus a `.csv` export of the same cases for tracking and future reference
 - **E2E test stubs** in the framework that fits the project type (see Step 3)
 - **Acceptance scenarios** mapped from requirements to Given/When/Then
 - **Test data strategy** — fixtures, factories, seed scripts
@@ -175,7 +175,9 @@ These map requirements → verifiable test conditions. They are distinct from co
 2. Fill the template scoped to **what changed**: pull the change list from requirements context, `$ARGUMENTS`, or KG Context — not the whole application.
 3. Derive cases with the reference's checklist: happy path per acceptance criterion, boundary values, equivalence classes, negative authorization (wrong role, other user's data), error handling, state transitions, double-submit, and a regression smoke check per adjacent area the change touched.
 4. Every case: concrete data values (never "a valid email"), an observable expected result (what the tester *sees*), a priority (P1/P2/P3), and an **AC Ref** so every acceptance criterion traces to at least one case.
-5. Write to `docs/TEST_PLAN-<kebab-feature>.md`. Report the path, case count, and priority breakdown — do not paste the plan into chat.
+5. Write to `docs/TEST_PLAN-<kebab-feature>.md`.
+6. **Also write `docs/TEST_PLAN-<kebab-feature>.csv`** — the same test cases (TC-* and RG-* rows) as a flat, importable sheet for future reference and tracking. Follow the CSV Export spec in `references/manual-test-plan.md`: one row per case, RFC 4180 quoting, Status column left blank for the tester.
+7. Report both paths, case count, and priority breakdown — do not paste the plan into chat.
 
 ---
 
@@ -249,7 +251,7 @@ Include when the project has any user interface — a Frontend section in Stack 
 
 Produce in this order:
 1. **QA Strategy document** — scope, what coding already covers, what this skill adds
-2. **Manual test plan** — `docs/TEST_PLAN-<feature>.md` (report path + case count, never paste)
+2. **Manual test plan** — `docs/TEST_PLAN-<feature>.md` + `docs/TEST_PLAN-<feature>.csv` (report paths + case count, never paste)
 3. **E2E stubs** (in the Step 3 framework, one file per journey group)
 4. **Acceptance scenarios** (Given/When/Then, plain text)
 5. **Test data files** (`e2e/fixtures/` or equivalent, factory stub)
@@ -264,6 +266,7 @@ Produce in this order:
 - Never regenerate unit or integration stubs if coding skill already produced them — note what exists, focus on gaps
 - Write stubs to files and report the file list plus one representative stub — never paste every generated file into chat
 - Manual test plan cases use concrete data values and observable expected results — a stranger must be able to execute them; every acceptance criterion maps to at least one case (AC Ref column)
+- The manual test plan is always written as both `.md` and `.csv` in `docs/` — the CSV mirrors the plan's cases exactly (CSV Export spec in `references/manual-test-plan.md`)
 - Load `references/frameworks.md` only when generating stubs, and `references/manual-test-plan.md` only at Step 5 — each once per invocation
 - E2E tests cover journeys, not implementation details — no assertions on class names or DOM structure beyond user-visible text and ARIA roles
 - Test names describe the user's observable outcome: "user sees dashboard after login" not "login route returns 200"

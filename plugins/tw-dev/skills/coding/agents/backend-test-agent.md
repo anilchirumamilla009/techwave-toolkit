@@ -22,6 +22,12 @@ Read all files written by the Backend Coding Agent:
 
 ---
 
+**Rules for all tests written by this agent:**
+- Every test body is complete and runnable — arrange, act, assert against the real handler/service. No `// TODO: implement` stubs, no placeholder assertions.
+- If a test file for the route/service already exists, add new tests into it with the Edit tool — never create a duplicate test file or repeat existing cases.
+
+---
+
 ## Step 2 — Generate Route Integration Tests
 
 For each route handler, write an integration test that fires a real HTTP request and asserts the response matches the OpenAPI spec:
@@ -30,7 +36,6 @@ For each route handler, write an integration test that fires a real HTTP request
 // POST /api/auth/login
 describe('POST /api/auth/login', () => {
   it('should return 200 with token and user when credentials are valid', async () => {
-    // TODO: implement
     const response = await request(app)
       .post('/api/auth/login')
       .send({ email: 'test@example.com', password: 'correctPassword' })
@@ -39,7 +44,6 @@ describe('POST /api/auth/login', () => {
   })
 
   it('should return 401 when password is incorrect', async () => {
-    // TODO: implement
     const response = await request(app)
       .post('/api/auth/login')
       .send({ email: 'test@example.com', password: 'wrongPassword' })
@@ -47,7 +51,6 @@ describe('POST /api/auth/login', () => {
   })
 
   it('should return 422 when email is missing from request body', async () => {
-    // TODO: implement
     const response = await request(app).post('/api/auth/login').send({ password: 'pw' })
     expect(response.status).toBe(422)
   })
@@ -63,7 +66,6 @@ For each service function, write unit tests with mocked dependencies (database, 
 ```typescript
 describe('AuthService.login', () => {
   it('should return token when credentials match', async () => {
-    // TODO: implement
     const mockRepo = { findByEmail: jest.fn().mockResolvedValue(mockUser) }
     const service = new AuthService(mockRepo)
     const result = await service.login({ email: 'a@b.com', password: 'correct' })
@@ -71,7 +73,6 @@ describe('AuthService.login', () => {
   })
 
   it('should throw InvalidCredentialsError when user not found', async () => {
-    // TODO: implement
     const mockRepo = { findByEmail: jest.fn().mockResolvedValue(null) }
     const service = new AuthService(mockRepo)
     await expect(service.login({ email: 'a@b.com', password: 'pw' })).rejects.toThrow(InvalidCredentialsError)
@@ -92,10 +93,16 @@ describe('AuthService.login', () => {
 
 ---
 
+## Step 5 — Run the Suite
+
+Run the declared test runner. Fix failures caused by the tests themselves (wrong import, bad mock, missing test DB setup). A failure that exposes a real bug in the backend code is not silenced — report it in the handoff for the Validator.
+
+---
+
 ## Handoff
 
 ```
-[Backend Test Agent] Complete — <N> test files written.
+[Backend Test Agent] Complete — <N> test files written, <P> passing / <F> failing (real bugs: <list or none>).
   Route integration tests: <list of routes covered>
   Service unit tests: <list of services covered>
 Handing off to Validator Agent...

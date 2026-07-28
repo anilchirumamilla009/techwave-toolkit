@@ -29,22 +29,25 @@ Check `references/stacks/` for a file matching the stack (`nodejs.md`, `python.m
 
 ## Step 3 — Confirm Before Writing
 
-Show the planned directory tree and key files. Wait for user confirmation — do not write anything until confirmed.
+**Check what already exists first.** Use the KG extract and Glob/ls against the planned paths. If the project already has a source tree, the plan extends it — same directories, same naming conventions, same patterns. Do not invent a parallel layout.
+
+Show the planned tree with each file marked `NEW` or `MODIFY`. Wait for user confirmation — do not write anything until confirmed.
 
 ```
-[Coding Agent] Planning [Stack] [project type] structure:
+[Coding Agent] Planning [Stack] [project type] changes:
 
-<directory tree>
+<directory tree — each file tagged NEW or MODIFY>
 
 Key files:
-- <file>: <one-line purpose>
+- <file> (NEW|MODIFY): <one-line purpose / what changes>
 
 Confirm? (yes / adjust)
 ```
 
 ## Step 4 — Write Code Files
 
-After confirmation, write every file. In Claude Code, prefer delegating this step to a subagent per the coding SKILL.md Token Efficiency Rules — pass it the confirmed tree, the contract, this component's Stack Config section, and the KG extract; only its summary returns. Either way:
+After confirmation, write every file. In Claude Code, prefer delegating this step to a subagent per the coding SKILL.md Token Efficiency Rules — pass it the confirmed tree (with NEW/MODIFY tags), the contract, this component's Stack Config section, the KG extract, and the edit-in-place rule below; only its summary returns. Either way:
+- **`MODIFY` files are changed in place with the Edit tool** — change the existing function/component/block, never append a second copy of it, never write the change to a new sibling file
 - Real, runnable code — no `TODO` placeholders, no pseudocode
 - Follow the ecosystem's conventions, not habits from another ecosystem (no `src/` in a Go module that doesn't need it, no classes in idiomatic Rust where traits fit)
 - No hardcoded secrets — `.env.example` (or the ecosystem's equivalent) with placeholders; real config files in `.gitignore`

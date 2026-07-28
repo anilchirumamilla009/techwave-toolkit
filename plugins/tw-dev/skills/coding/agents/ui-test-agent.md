@@ -20,6 +20,12 @@ Read all files written by the UI Coding Agent:
 
 ---
 
+**Rules for all tests written by this agent:**
+- Every test body is complete and runnable — arrange, act, assert against the real component/function. No `// TODO: implement` stubs, no placeholder assertions.
+- If a test file for the component/module already exists, add new tests into it with the Edit tool — never create a duplicate test file or repeat existing cases.
+
+---
+
 ## Step 2 — Generate Component Tests
 
 For each component, write tests that assert on visible behavior — not implementation details:
@@ -27,7 +33,6 @@ For each component, write tests that assert on visible behavior — not implemen
 ```typescript
 describe('LoginForm', () => {
   it('should submit credentials when form is filled and submitted', async () => {
-    // TODO: implement
     render(<LoginForm onSuccess={vi.fn()} />)
     await userEvent.type(screen.getByLabelText('Email'), 'test@example.com')
     await userEvent.type(screen.getByLabelText('Password'), 'password123')
@@ -36,7 +41,6 @@ describe('LoginForm', () => {
   })
 
   it('should display error message when login fails', async () => {
-    // TODO: implement
     expect(screen.getByText(/invalid credentials/i)).toBeInTheDocument()
   })
 })
@@ -51,7 +55,6 @@ For each function in `src/api/client.ts`, write tests that mock `fetch` (or `axi
 ```typescript
 describe('loginUser', () => {
   it('should POST to /api/auth/login with credentials', async () => {
-    // TODO: implement
     const mockFetch = vi.fn().mockResolvedValue({ ok: true, json: () => ({ token: 'abc', user: {} }) })
     global.fetch = mockFetch
     await loginUser({ email: 'a@b.com', password: 'pw' })
@@ -62,7 +65,6 @@ describe('loginUser', () => {
   })
 
   it('should throw APIError when response is not ok', async () => {
-    // TODO: implement
     await expect(loginUser({ email: '', password: '' })).rejects.toThrow(APIError)
   })
 })
@@ -81,10 +83,16 @@ describe('loginUser', () => {
 
 ---
 
+## Step 5 — Run the Suite
+
+Run the declared test runner. Fix failures caused by the tests themselves (wrong import, bad mock, wrong selector). A failure that exposes a real bug in the UI code is not silenced — report it in the handoff for the Validator.
+
+---
+
 ## Handoff
 
 ```
-[UI Test Agent] Complete — <N> test files written.
+[UI Test Agent] Complete — <N> test files written, <P> passing / <F> failing (real bugs: <list or none>).
   Component tests: <list>
   API client tests: <list>
 ```

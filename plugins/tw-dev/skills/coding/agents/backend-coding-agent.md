@@ -32,7 +32,7 @@ Map to the stack reference file:
 
 ## Step 2 — Plan the Structure
 
-All backend code lives under `backend/` in the monorepo root. Show the planned tree:
+**Check the existing backend first.** Use the KG extract and Glob. If the project already has a backend tree, plan inside it — its layout, naming, and layering win over the default below. Only a project with no backend at all gets the default `backend/` tree at the monorepo root. Tag each planned file `NEW` or `MODIFY`. Show the planned tree:
 
 ```
 [Backend Coding Agent] Planning Node.js (Express + TypeScript) structure:
@@ -81,6 +81,7 @@ router.post('/auth/login', validateBody(LoginRequestSchema), async (req, res) =>
 ```
 
 Rules:
+- **`MODIFY` files are edited in place with the Edit tool** — change the existing handler/service/model, never append a second copy of it, never write the change to a new sibling file
 - Every route from the spec is implemented — no missing handlers
 - Input validation matches the spec's request schema (use Zod for Node.js, Pydantic for Python, etc.)
 - Auth middleware is applied to every route where the spec requires `security: [BearerAuth: []]`

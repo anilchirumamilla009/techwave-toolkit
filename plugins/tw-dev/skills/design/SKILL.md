@@ -1,8 +1,8 @@
 ---
 name: design
 description: Use when the user asks to "design the system", create an "architecture diagram", "component diagram", "sequence diagram", "ER diagram", "C4 diagram", "data model", write an "ADR", recommend a "tech stack", or produce "HLD"/"LLD" (high/low level design) — design artifacts for any technology stack.
-version: 0.5.0
-disable-model-invocation: true
+version: 0.6.0
+disable-model-invocation: false
 user-invocable: true
 ---
 
@@ -79,8 +79,9 @@ I'll create docs/ if it doesn't exist. Proceed?
 
 After confirmation:
 1. Create `docs/` in the project root if it does not exist
-2. Write each document using the templates below
-3. ADRs: filename `docs/ADR-<NNN>-<kebab-title>.md`; increment NNN by reading existing ADR files
+2. **Version before revising.** If the target doc already exists (same feature designed again): read its `Version` from the Version Log (treat a doc without one as v1), copy the current file as-is to `docs/design-history/<basename>-v<N>.md` (create `docs/design-history/` if missing; never overwrite an existing snapshot), then update the canonical doc in place — revise the affected sections, set Version to N+1, and append a Version Log row saying what changed and why
+3. Write each document using the templates below; a brand-new doc starts at Version 1
+4. ADRs: filename `docs/ADR-<NNN>-<kebab-title>.md`; increment NNN by reading existing ADR files. ADRs are immutable — a changed decision gets a new ADR that supersedes the old one, not an edit
 
 ---
 
@@ -121,6 +122,12 @@ C4Container
 | Availability | [e.g., 99.9%] |
 | Latency (p99) | [e.g., < 200ms] |
 | Data retention | [e.g., 90 days] |
+
+## Version Log
+
+| Version | Date | Change summary |
+|---|---|---|
+| 1 | [YYYY-MM-DD] | Initial design |
 ````
 
 ### LLD (`docs/LLD.md`)
@@ -159,6 +166,12 @@ erDiagram
 | Scenario | Behavior |
 |---|---|
 | [e.g., upstream timeout] | [e.g., retry x3, then return 503] |
+
+## Version Log
+
+| Version | Date | Change summary |
+|---|---|---|
+| 1 | [YYYY-MM-DD] | Initial design |
 ````
 
 ### ADR (`docs/ADR-NNN-title.md`)
@@ -170,6 +183,8 @@ Use template from `references/adr-template.md` exactly. Never skip the **Consequ
 ## Key Rules
 
 - Always write HLD and LLD to `docs/` — never leave design artifacts only in chat
+- If `docs/HLD.md` or `docs/LLD.md` already exists, update it in place with the Edit tool (read it first, revise the affected sections) — never create a variant file like `HLD-v2.md` next to it or a duplicate section
+- Re-designing the same feature keeps history: snapshot the current doc to `docs/design-history/<basename>-v<N>.md` before revising, bump the Version, and log what changed in the Version Log — prior snapshots are never modified or deleted
 - Confirm planned files with the user before writing anything
 - Diagrams are Mermaid text only — no SVG, no image URLs, no binary
 - ADR Status must be one of: Proposed, Accepted, Deprecated, Superseded by [ADR-NNN]

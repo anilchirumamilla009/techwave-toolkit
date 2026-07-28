@@ -34,7 +34,8 @@ If Stack Config is absent, derive from the stack name the user provided in Step 
 ## Step 3 — Write Test Files
 
 - Test names describe behavior: `should return 404 when user not found`
-- Every test body has a failing assertion + `// TODO: implement`
+- **Every test body is complete and runnable** — arrange, act, assert against the real code under test. No `// TODO: implement` stubs, no empty bodies, no placeholder assertions
+- If a test file for the module already exists, **add the new tests into it with the Edit tool** — do not create a second test file for the same module or duplicate existing test cases
 - Distinguish real dependencies (DB, HTTP) from mocks explicitly in each test
 
 Coverage targets by risk:
@@ -45,12 +46,16 @@ Coverage targets by risk:
 | Medium (business logic, APIs, pipeline transforms, CLI commands) | 80%+ | 60%+ |
 | Low (utilities, UI, glue code) | 60%+ | — |
 
+## Step 4 — Run the Suite
+
+Run the declared test runner. Fix failures caused by the tests themselves (wrong import, bad mock, wrong selector). A failure that exposes a real bug in the code under test is not silenced — report it in the handoff for the Validator.
+
 ## Handoff
 
-Report file names and coverage targets — do not echo test file contents into chat:
+Report file names, run result, and coverage targets — do not echo test file contents into chat:
 
 ```
-[Unit Test Agent] Complete — <N> test files written, targeting <X>% coverage.
+[Unit Test Agent] Complete — <N> test files written, <P> passing / <F> failing (real bugs: <list or none>).
 Handing off to Validator Agent...
 ```
 

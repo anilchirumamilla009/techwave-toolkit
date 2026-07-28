@@ -59,7 +59,9 @@ If no images are found in either location, note it and proceed with structure de
 
 ## Step 3 — Plan the Structure
 
-Produce a compact planned tree — **do not echo full file contents here**. Show the tree, map each page to its screen reference image, and list key decisions:
+**Check the existing frontend first.** Use the KG extract and Glob against the planned paths. If the project already has a frontend tree (any layout — not necessarily `frontend/`), plan inside it: reuse its directory structure, component naming, styling approach, and state patterns. A component, page, hook, or API function that already exists is planned as `MODIFY`, never as a new sibling.
+
+Produce a compact planned tree with each file tagged `NEW` or `MODIFY` — **do not echo full file contents here**. Show the tree, map each page to its screen reference image, and list key decisions:
 
 ```
 [UI Coding Agent] Planning <Framework> structure:
@@ -101,11 +103,12 @@ Confirm? (yes / adjust)
 
 After confirmation, **delegate all file writing to a subagent** (Agent/Task tool) carrying only:
 - The compact operation table and schema list from Step 1
-- The confirmed directory tree from Step 3
+- The confirmed directory tree from Step 3 (with NEW/MODIFY tags)
 - The screen map from Step 2 (image references with their component mappings)
 - The relevant Stack Config Frontend section
+- This instruction, verbatim: **"Files tagged MODIFY are edited in place with the Edit tool — Read the file, change the existing component/function/block, and never append a duplicate of it, never create a parallel file (`*_new`, `*-v2`, `ComponentCopy`), and never emit the change as a separate code block or file. Match the file's existing style and imports."**
 
-The subagent writes all files. Only its summary (files written, notable decisions, open issues) returns to the main conversation — **never echo file bodies back**.
+The subagent writes all files. Only its summary (files written/modified, notable decisions, open issues) returns to the main conversation — **never echo file bodies back**.
 
 **If running in a context without subagent support (Copilot CLI), write files inline** but still do not echo their contents into chat — report the tree and decisions only.
 

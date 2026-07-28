@@ -1,7 +1,7 @@
 ---
 name: coding
 description: Use when the user asks to "scaffold a project", "generate boilerplate", "create project structure", "write the code for", "implement this feature", "build a CLI tool", "create a library", "scaffold a mobile app", or "start a new project". Multi-agent flow for any project type (web, API, CLI, library, mobile, desktop, data/ML, infra) — single or multi-component with an interface contract.
-version: 0.5.0
+version: 0.6.0
 disable-model-invocation: true
 user-invocable: true
 ---
@@ -170,6 +170,8 @@ Multi-agent flows burn tokens fast; these rules keep the cost proportional to th
 
 ## Key Rules
 
+- **Edit in place.** When a target file already exists, modify it with the Edit tool. Never create a parallel copy (`*_new`, `*-v2`, `*.updated`, a second component with a suffix), never append a duplicate of an existing function/component/block next to the original, and never scaffold a fresh tree when the project already has one — extend the existing structure and follow its conventions. New files are for genuinely new modules only. This rule travels with any subagent delegation.
+- **Tests are real.** Test agents write complete, runnable test bodies — arrange, act, assert — never `// TODO: implement` stubs. Before handoff, run the declared test runner and fix failures caused by the tests themselves (a failure that exposes a real code bug goes to the Validator, not silently skipped).
 - No agent writes any file until it receives explicit user confirmation for its own component
 - Each agent announces its start and handoff — the user can follow the flow
 - Contract Agent confirmation is separate from coding agent confirmations — it is its own gate in fullstack and multi-component modes
