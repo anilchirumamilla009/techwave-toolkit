@@ -1,0 +1,21 @@
+{
+  "name": "tw-ba",
+  "version": "0.1.0",
+  "description": "Domain-agnostic business-analysis skill: /ba drives discovery → domain & process analysis → UX & data modeling → compliance requirements → functional spec (FRD + RTM), writing development-ready artifacts to docs/ba/. Knowledge-graph context first (graphify); industry specifics load from optional domain references.",
+  "author": {
+    "name": "Venkata Anil Kumar Chirumamilla",
+    "email": "anil.chirumamilla@techwave.com"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/anilchirumamilla009/techwave-toolkit",
+  "keywords": ["business-analysis", "ba", "requirements-discovery", "functional-spec", "frd", "rtm", "use-cases", "wireframes", "sdlc"],
+  "repository": "https://github.com/anilchirumamilla009/techwave-toolkit",
+  "skills": [
+    {
+      "name": "ba",
+      "path": "skills/ba/SKILL.md",
+      "invoke": "/ba",
+      "description": "Entry point — drives the full BA flow from a business objective, Jira ticket, or Confluence page to development-ready deliverables in docs/ba/"
+    }
+  ]
+}

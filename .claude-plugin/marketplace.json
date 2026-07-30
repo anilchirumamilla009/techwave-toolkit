@@ -14,6 +14,13 @@
       "category": "development"
     },
     {
+      "name": "tw-ba",
+      "source": "./plugins/tw-ba",
+      "description": "Domain-agnostic business analysis — /ba drives discovery → domain & process analysis → UX & data modeling → compliance requirements → functional spec (FRD + RTM) into docs/ba/, knowledge-graph context first. Industry specifics via optional domain references; hands off to tw-dev.",
+      "version": "0.1.0",
+      "category": "analysis"
+    },
+    {
       "name": "tw-atlassian",
       "source": "./plugins/tw-atlassian",
       "description": "Atlassian MCP integration — connects Jira and Confluence to the tw-dev orchestrator via OAuth browser login. Install separately; no authentication is forced on tw-dev users.",
