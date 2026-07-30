@@ -10,14 +10,14 @@
       "name": "tw-dev",
       "source": "./plugins/tw-dev",
       "description": "Dev-phase SDLC skills for any kind of development: orchestrate, requirements, design, coding (web, API, CLI, library, mobile, data/ML — single or multi-component with interface contracts), QA strategy (E2E/acceptance/performance), and compliance — stack and project-type agnostic",
-      "version": "0.9.4",
+      "version": "0.9.5",
       "category": "development"
     },
     {
       "name": "tw-ba",
       "source": "./plugins/tw-ba",
       "description": "Domain-agnostic business analysis — /ba drives discovery → domain & process analysis → UX & data modeling → compliance requirements → functional spec (FRD + RTM) into docs/ba/, knowledge-graph context first. Industry specifics via optional domain references; hands off to tw-dev.",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "category": "analysis"
     },
     {
