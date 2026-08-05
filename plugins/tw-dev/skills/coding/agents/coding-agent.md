@@ -31,6 +31,8 @@ Check `references/stacks/` for a file matching the stack (`nodejs.md`, `python.m
 
 **Check what already exists first.** Use the KG extract and Glob/ls against the planned paths. If the project already has a source tree, the plan extends it — same directories, same naming conventions, same patterns. Do not invent a parallel layout.
 
+**Plan to the coding standards.** The tree itself must respect the standards from SKILL.md: no planned file that will exceed ~300 lines (split by domain/responsibility now, in the plan — never "one big file, refactor later"), and a single global constants module for the component (`src/constants.ts`, `app/constants.py`, `internal/constants/`, or the project's existing convention) listed explicitly in the tree.
+
 Show the planned tree with each file marked `NEW` or `MODIFY`. Wait for user confirmation — do not write anything until confirmed.
 
 ```
@@ -46,10 +48,11 @@ Confirm? (yes / adjust)
 
 ## Step 4 — Write Code Files
 
-After confirmation, write every file. In Claude Code, prefer delegating this step to a subagent per the coding SKILL.md Token Efficiency Rules — pass it the confirmed tree (with NEW/MODIFY tags), the contract, this component's Stack Config section, the KG extract, and the edit-in-place rule below; only its summary returns. Either way:
+After confirmation, write every file. In Claude Code, prefer delegating this step to a subagent per the coding SKILL.md Token Efficiency Rules — pass it the confirmed tree (with NEW/MODIFY tags), the contract, this component's Stack Config section, the KG extract, the edit-in-place rule below, and the Coding Standards block from SKILL.md verbatim; only its summary returns. Either way:
 - **`MODIFY` files are changed in place with the Edit tool** — change the existing function/component/block, never append a second copy of it, never write the change to a new sibling file
 - Real, runnable code — no `TODO` placeholders, no pseudocode
 - Follow the ecosystem's conventions, not habits from another ecosystem (no `src/` in a Go module that doesn't need it, no classes in idiomatic Rust where traits fit)
+- **Standards from SKILL.md apply to every file**: nothing over ~300 lines (extract when a `MODIFY` target is already near the cap); every magic number/string/limit goes in the component's global constants module, never inlined or duplicated across files
 - No hardcoded secrets — `.env.example` (or the ecosystem's equivalent) with placeholders; real config files in `.gitignore`
 - If implementing against a contract (multi-component mode), implement this component's side of every interface in the contract
 - Honor any structure adjustments the user requested before confirming

@@ -12,8 +12,9 @@ Invoke any skill with `/skill-name`:
 | Requirements | `/requirements` | Writes user stories, acceptance criteria, BDD scenarios |
 | Design | `/design` | Creates HLD and LLD saved to `docs/`, ADRs, tech-stack evaluations |
 | Coding | `/coding [stack]` | Any project type — single-component flow, fullstack web (UI + Backend agents), or multi-component with an interface contract |
-| QA | `/qa` | E2E scenarios, acceptance mapping, test data strategy, performance plan — layers above what `/coding` generates |
 | Compliance | `/compliance [domain]` | HIPAA, PCI DSS, GDPR, SOC 2 code-level review |
+
+QA (`/qa` — manual test plan with step-by-step instructions and test data creation steps, drafted into `docs/test/`) moved to the separate **tw-qa** plugin: `copilot plugin install tw-qa@techwave`. All automated tests (unit + integration) are written by `/coding`'s test agents.
 
 ## Knowledge graph (Step 0)
 
@@ -31,6 +32,6 @@ This means skills understand your existing codebase — modules, stack, patterns
 /requirements login feature    — write stories only
 /design create HLD for auth    — design only
 /coding                        — generate code + unit/integration tests + validation
-/qa login feature              — E2E scenarios, acceptance mapping, test data
+/qa login feature              — manual test plan into docs/test/ (tw-qa plugin)
 /compliance health             — HIPAA review
 ```

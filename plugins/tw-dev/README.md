@@ -1,10 +1,10 @@
 # tw-dev — Full Reference
 
-SDLC skills plugin for GitHub Copilot CLI. Drives the full development lifecycle — requirements, architecture, code generation, QA strategy, and compliance — from a single Copilot session.
+SDLC skills plugin for GitHub Copilot CLI. Drives the full development lifecycle — requirements, architecture, code generation, and compliance — from a single Copilot session. QA strategy lives in the separate [tw-qa plugin](../tw-qa/README.md); the orchestrator invokes its `/qa` skill when installed.
 
 Works with **any project type** (web app, API, CLI, library, mobile, desktop, data pipeline, ML, infra) and **any stack** (Node.js, Python, Go, Java, Rust, .NET, React, Vue, Swift, Kotlin, Flutter, and beyond).
 
-**Version:** 0.9.3 · **License:** MIT · **Author:** Venkata Anil Kumar Chirumamilla
+**Version:** 0.10.0 · **License:** MIT · **Author:** Venkata Anil Kumar Chirumamilla
 
 > **Installation and update commands** → see the [root README](../../README.md).
 
@@ -17,12 +17,12 @@ Works with **any project type** (web app, API, CLI, library, mobile, desktop, da
   - [Requirements](#requirements)
   - [Design](#design)
   - [Coding](#coding)
-  - [QA Strategy](#qa-strategy)
+  - [QA Strategy — moved to tw-qa](#qa-strategy--moved-to-tw-qa)
   - [Compliance](#compliance)
 - [Tech Stack Config](#tech-stack-config)
 - [Knowledge Graph — Step 0](#knowledge-graph--step-0)
 - [Atlassian MCP Integration](#atlassian-mcp-integration)
-- [Hooks — Compliance Scan](#hooks--compliance-scan)
+- [Hooks — moved to tw-hooks](#hooks--moved-to-tw-hooks)
 - [Plugin Structure](#plugin-structure)
 
 ---
@@ -33,7 +33,7 @@ Works with **any project type** (web app, API, CLI, library, mobile, desktop, da
 
 ### Orchestrator
 
-**Entry point for the full SDLC workflow.** Give it any form of requirement — Jira ticket ID, GitHub issue URL, Confluence page, or plain text — and it drives requirements → design → coding → QA → compliance in sequence, asking for your approval at each phase boundary.
+**Entry point for the full SDLC workflow.** Give it any form of requirement — Jira ticket ID, GitHub issue URL, Confluence page, or plain text — and it drives requirements → design → coding → QA → compliance in sequence, asking for your approval at each phase boundary. The QA phase requires the [tw-qa plugin](../tw-qa/README.md); without it, the orchestrator proposes the sequence without QA and tells you how to install it.
 
 #### How to invoke
 
@@ -75,7 +75,7 @@ Shows only the missing phases. You type `go` to start or adjust.
 
 ```
 New feature:           /requirements → /design → /coding → /qa → /compliance
-Code exists, no tests: /qa → /compliance
+Code exists, no tests: /coding (write the missing unit + integration tests) → /qa → /compliance
 Bug ticket:            /requirements (bug story) → /coding → /qa
 ```
 
@@ -239,62 +239,24 @@ If images are found, each page/component is generated to match the visible layou
 - Generated code is immediately runnable — no `TODO` in production code paths.
 - Hardcoded secrets are always HIGH severity in the Validator report.
 
+#### Coding standards (Validator-enforced)
+
+- **File size** — no source file over ~300 lines (Validator fails anything over 400); one responsibility per file. Decomposition is planned in the confirmed tree, never "one big file, refactor later".
+- **Global constants module** — one constants home per component (`src/constants.ts`, `app/constants.py`, or the project's existing convention). Magic numbers, status strings, limits, and shared literals never appear inline or scattered across per-feature files.
+- **Unit test correctness** — one behavior per test, arrange–act–assert, assertions on observable behavior, no tautological or assertion-free tests, mocks only at external boundaries, deterministic and order-independent. The Validator's Test Quality check fails violations; its verdict includes a dedicated `Standards` line.
+
 ---
 
-### QA Strategy
+### QA Strategy — moved to tw-qa
 
-Generates the testing layers above unit and integration stubs. If `/coding` has already run, `/qa` detects existing test files and focuses only on what is missing.
+The `/qa` skill now lives in the separate **[tw-qa plugin](../tw-qa/README.md)**. It drafts the **manual testing plan** for the change set `/coding` produced — full step-by-step instructions plus concrete test data creation steps — into `docs/test/TEST_PLAN-<feature>.md` (+ importable CSV). Documents only: **all automated tests (unit + integration) are written here in tw-dev by `/coding`'s test agents**; `/qa` reports automated-coverage gaps back to `/coding`.
 
-#### How to invoke
-
-```
-/qa checkout flow
-/qa login feature
-/qa payments API
-/qa                    # full QA strategy for the current codebase
+```bash
+claude plugin install tw-qa@techwave     # Claude Code
+copilot plugin install tw-qa@techwave    # Copilot CLI
 ```
 
-#### What it produces
-
-| Output | Description |
-|---|---|
-| Manual test plan | `docs/TEST_PLAN-<feature>.md` — step-by-step test cases with real data values, expected results, AC traceability, and sign-off |
-| E2E stubs | One file per journey group, in the project type's idiomatic framework |
-| Acceptance scenarios | Given/When/Then in domain language, mapped from requirements |
-| Test data strategy | Fixtures, factory stubs, seed script outline |
-| Performance plan | k6/Locust/Artillery scenarios + latency/throughput targets |
-| Accessibility checklist | WCAG 2.1 AA checks — when the project has a UI |
-
-#### E2E framework by project type
-
-| Project type | Framework |
-|---|---|
-| Web frontend | Playwright (or Cypress) |
-| API only | Supertest / httpx at the API boundary |
-| Mobile | Maestro · Detox · XCUITest · Espresso |
-| CLI tool | bats or subprocess tests — exit codes, stdout/stderr |
-| Library / SDK | Consumer-perspective example project |
-| Data pipeline / ML | Full-run fixture tests + data-quality suites |
-
-#### Division of labour with `/coding`
-
-| Layer | Generated by |
-|---|---|
-| Unit test stubs | `/coding` — Unit Test or Backend Test Agent |
-| Route integration stubs | `/coding` — Backend Test Agent |
-| Component + API client tests | `/coding` — UI Test Agent |
-| **Manual test plan** (`docs/TEST_PLAN-*.md`) | **`/qa`** |
-| **E2E scenarios** | **`/qa`** |
-| **Acceptance mapping** | **`/qa`** |
-| **Test data strategy** | **`/qa`** |
-| **Performance plan** | **`/qa`** |
-| **Accessibility checklist** | **`/qa`** |
-
-#### Key rules
-
-- Never regenerates unit or integration stubs already produced by `/coding`.
-- E2E test names describe the user's observable outcome — no implementation references.
-- Test data factories generate unique data per test run — no shared mutable state.
+Once installed, `/qa` works exactly as before, standalone or as Phase 4 of `/orchestrator`. The division of labour is unchanged: `/coding` generates unit/integration stubs; `/qa` generates everything above that layer and never regenerates what `/coding` produced. Full reference: [tw-qa README](../tw-qa/README.md).
 
 ---
 
@@ -404,7 +366,7 @@ Any `## Section` heading (except `## Notes`) counts as a component. Use whatever
 | Skill | How it uses Stack Config |
 |---|---|
 | `/coding` | Reads stack and test runner — no file scanning |
-| `/qa` | Picks the right E2E framework and test runner per layer |
+| `/qa` (tw-qa plugin) | Fills the manual test plan's environment & prerequisites section |
 | `/orchestrator` | Populates stack signals and compliance domain in the requirement struct |
 | `/design` | Skips tech-stack questions — uses declared stack directly |
 | `/compliance` | Reads `Compliance domain:` from Notes — no auto-detection needed |
@@ -511,34 +473,16 @@ See `skills/orchestrator/references/mcp-sources.md` for full tool name signature
 
 ---
 
-## Hooks — Compliance Scan
+## Hooks — moved to tw-hooks
 
-The plugin registers a `PostToolUse` hook that runs automatically after every file write and scans the modified file for security and compliance issues.
+The compliance-scan hook (and a new sensitive-data guard that blocks reading/exfiltrating secret files) now live in the separate **[tw-hooks plugin](../tw-hooks/README.md)**, shared by all TechWave plugins:
 
-### What the hook scans for
-
-| Pattern | Example |
-|---|---|
-| Hardcoded credentials | `password = "mysecret"`, `api_key: "abc123"` |
-| PII passed to logging | `console.log(user.ssn)`, `print(f"DOB: {dob}")` |
-| Embedded cloud access keys | AWS `AKIA...` format key IDs |
-
-### Behavior
-
-| Condition | Behavior |
-|---|---|
-| File is clean | Exits silently |
-| Issue detected | Emits a warning to stderr with file name. Warning is fed back to the model so it can auto-fix. |
-| Binary file | Skipped |
-| File > 500 KB | Skipped (stays within 5-second hook timeout) |
-
-### Example warning
-
+```bash
+claude plugin install tw-hooks@techwave     # Claude Code
+copilot plugin install tw-hooks@techwave    # Copilot CLI
 ```
-[tw-dev] WARNING: Possible hardcoded credential in src/config.ts. Use environment variables.
-[tw-dev] WARNING: Possible PII in log statement in src/service/user.ts. Remove PII from logs.
-[tw-dev] WARNING: Possible AWS Access Key ID in scripts/deploy.sh. Rotate immediately.
-```
+
+Install it alongside tw-dev to keep the guardrails: PostToolUse credential/PII/cloud-key scanning on every file write, plus PreToolUse blocking of `.env`, private-key, and cloud-credential reads.
 
 ---
 
@@ -588,12 +532,6 @@ plugins/tw-dev/
 │   │       ├── react.md              # React + Vite + TypeScript
 │   │       ├── rust.md               # Rust + Axum
 │   │       └── dotnet.md             # .NET 8 + ASP.NET Core
-│   ├── qa/
-│   │   ├── SKILL.md
-│   │   └── references/
-│   │       ├── frameworks.md
-│   │       ├── manual-test-plan.md
-│   │       └── test-types.md
 │   └── compliance/
 │       ├── SKILL.md
 │       └── references/
@@ -601,9 +539,6 @@ plugins/tw-dev/
 │           ├── pci-dss.md
 │           ├── gdpr.md
 │           └── soc2.md
-├── hooks/
-│   ├── copilot-hooks.json            # Registers PostToolUse compliance-scan hook
-│   └── compliance-scan.sh            # Scans file writes for secrets + PII
 └── scripts/
     ├── setup-kg.sh
     ├── query-kg.sh

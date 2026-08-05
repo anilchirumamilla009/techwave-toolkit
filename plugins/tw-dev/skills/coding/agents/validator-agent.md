@@ -31,10 +31,17 @@ Run the appropriate checks below.
 | Missing input validation on external data | FAIL | MED |
 | Secrets only in `.env.example`, `.env` gitignored | PASS | — |
 
-### Check 3 — Test Adequacy
+### Check 3 — Test Correctness & Adequacy
 - Happy path covered for every public function → required
 - At least one error/edge case per function → required
-- No empty test bodies (only `// TODO: implement` stubs are acceptable) → required
+- **No empty test bodies, `// TODO` stubs, assertion-free tests, or tautological assertions** (`expect(true).toBe(true)`, asserting a mock returns what it was stubbed with) → FAIL
+- Tests assert observable behavior, not implementation internals; the unit under test is never mocked → FAIL if violated
+- Deterministic: no unseeded randomness, real network calls, wall-clock dependence, or sleeps; no order-dependence between tests → FAIL (MED)
+
+### Check 3.5 — Coding Standards
+- **Any source file over 400 lines → FAIL (MED)** — report the line count and a suggested split (`wc -l` on written files; test files and generated lockfiles exempt)
+- **Magic values / scattered constants → FAIL (MED)** — repeated literals or config values inline instead of the component's global constants module (`src/constants.ts`, `app/constants.py`, or the project's existing convention); per-feature constant files when a global module exists
+- One responsibility per file — a file mixing unrelated domains is flagged with the split suggestion
 
 ---
 
@@ -74,6 +81,7 @@ Mode: Single-Component | Fullstack Web | Multi-Component
 Correctness  : PASS | FAIL
 Security     : PASS | FAIL
 Test Quality : PASS | FAIL
+Standards    : PASS | FAIL   (file size ≤400, global constants module, single responsibility)
 [Fullstack / Multi-component only]
 Contract     : PASS | FAIL   (all contract operations implemented + consumed)
 

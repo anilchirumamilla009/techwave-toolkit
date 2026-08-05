@@ -1,6 +1,6 @@
 # Manual Test Plan — Template & Derivation Rules
 
-The manual test plan is a standalone document a human tester executes to verify the change — no code required. Save to `docs/TEST_PLAN-<kebab-feature>.md`, and export the cases to `docs/TEST_PLAN-<kebab-feature>.csv` (spec below). Every case must be executable by someone who did not write the code.
+The manual test plan is a standalone document a human tester executes to verify the change — no code required. Save to `docs/test/TEST_PLAN-<kebab-feature>.md`, and export the cases to `docs/test/TEST_PLAN-<kebab-feature>.csv` (spec below). Every case must be executable by someone who did not write the code.
 
 ---
 
@@ -30,12 +30,23 @@ The manual test plan is a standalone document a human tester executes to verify 
 | Test data | <seed script to run, fixtures needed, starting state> |
 | Tools | <browser + version, API client, device> |
 
-## 3. Entry / Exit Criteria
+## 3. Test Data Creation
 
-**Entry:** build deployed to test env · unit/integration suites green · test data seeded
+Numbered steps a stranger can execute to create every entity the cases below need. Concrete values only; each step ends with an observable confirmation. Cases reference this data by name.
+
+| Step | Action | Data / values | Confirmation |
+|---|---|---|---|
+| TD-1 | <run seed script / exact UI path / exact API call> | <concrete values, e.g. user `test-042@example.com` / `Passw0rd!x`, role `member`> | <what you see when it worked> |
+| TD-2 | ... | ... | ... |
+
+**Cleanup / reset:** <numbered steps to remove or reset this data so the plan is repeatable>
+
+## 4. Entry / Exit Criteria
+
+**Entry:** build deployed to test env · unit/integration suites green (all cases written by `/coding`) · §3 data created
 **Exit:** all P1 cases Pass · no open Critical/High defects · P2 failures triaged with owner
 
-## 4. Test Cases
+## 5. Test Cases
 
 ### <Functional area 1>
 
@@ -46,18 +57,18 @@ The manual test plan is a standalone document a human tester executes to verify 
 
 *(repeat table per functional area; Status: Pass / Fail / Blocked / Skipped)*
 
-## 5. Regression Checklist
+## 6. Regression Checklist
 
 | ID | Area touched by this change | Quick check | Status |
 |---|---|---|---|
 | RG-001 | <adjacent feature> | <one-line smoke check> | ☐ |
 
-## 6. Defects Found
+## 7. Defects Found
 
 | ID | Test case | Severity | Description | Status |
 |---|---|---|---|---|
 
-## 7. Sign-off
+## 8. Sign-off
 
 | Role | Name | Verdict (Ship / Block) | Date |
 |---|---|---|---|
@@ -67,7 +78,7 @@ The manual test plan is a standalone document a human tester executes to verify 
 
 ## CSV Export
 
-Write the same cases to `docs/TEST_PLAN-<kebab-feature>.csv` — a flat sheet the team can import into Excel, Jira/Zephyr, or TestRail and keep as an execution record. Generate it from the finished plan so the two files never disagree.
+Write the same cases to `docs/test/TEST_PLAN-<kebab-feature>.csv` — a flat sheet the team can import into Excel, Jira/Zephyr, or TestRail and keep as an execution record. Generate it from the finished plan so the two files never disagree.
 
 **Header (exact order):**
 
@@ -102,6 +113,7 @@ Derive cases in this order — each acceptance criterion must map to at least on
 6. **State transitions** — for workflows: every legal transition once, plus one illegal transition (e.g., cancel an already-shipped order)
 7. **Idempotency / double-submit** — double-click submit, browser back + resubmit, refresh on confirmation page
 8. **Regression** — one smoke check per adjacent feature the diff touched (derive from KG Context / changed files)
+9. **Manual accessibility checks** (only when the change touches a UI): full keyboard navigation with logical Tab order and no focus traps, all actions possible without a mouse, visible labels on form inputs, validation errors appearing next to their field, contrast spot-check, no content flashing more than 3×/second
 
 ## Rules for Writing Cases
 

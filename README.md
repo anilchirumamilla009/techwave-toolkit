@@ -9,7 +9,9 @@ All commands below are shown for both CLIs — use the one you work in. Skills b
 | Plugin | Version | What it does |
 |---|---|---|
 | **tw-ba** | 0.1.0 | Business analysis. `/ba` turns a business objective into development-ready BA deliverables in `docs/ba/<feature>/` — stakeholder analysis, domain & process models, UX wireframes, data dictionary & API spec, compliance requirements, and a functional spec (FRD + traceability matrix). Domain-agnostic; industry specifics (e.g. healthcare/FHIR) load from optional domain references. |
-| **tw-dev** | 0.9.4 | Development phases. `/orchestrator` drives the full dev flow from a ticket or requirement; individual skills: `/requirements` (user stories, acceptance criteria, BDD), `/design` (HLD/LLD/ADRs with version history), `/coding` (multi-agent code + unit tests + validation for any project type), `/qa` (manual test plan + CSV, E2E stubs, performance plan), `/compliance` (code-level HIPAA/PCI/GDPR/SOC 2 review). Stack- and project-type agnostic. |
+| **tw-dev** | 0.10.0 | Development phases. `/orchestrator` drives the full dev flow from a ticket or requirement; individual skills: `/requirements` (user stories, acceptance criteria, BDD), `/design` (HLD/LLD/ADRs with version history), `/coding` (multi-agent code + unit tests + validation for any project type), `/compliance` (code-level HIPAA/PCI/GDPR/SOC 2 review). Stack- and project-type agnostic. |
+| **tw-qa** | 0.1.0 | Manual QA planning. `/qa` drafts the manual testing plan for a change set — typically what `/coding` just built — into `docs/test/TEST_PLAN-*.md` (+ importable CSV): full step-by-step instructions, concrete test data creation steps with cleanup, boundary/negative/authorization cases, regression checklist, sign-off. Documents only — all automated tests (unit + integration) are written by tw-dev `/coding`'s test agents. Standalone or as Phase 4 of the tw-dev orchestrator. |
+| **tw-hooks** | 0.1.0 | Shared guardrails for all TechWave plugins (moved out of tw-dev). PreToolUse sensitive-data guard **blocks** reading or exfiltrating secret files (`.env`, private keys, cloud credentials, tfstate) so secrets never enter the conversation; PostToolUse compliance scan warns on hardcoded credentials, PII in log statements, and cloud access keys in written files. No skills — install alongside any other plugin. |
 | **tw-atlassian** | 1.0.0 | Atlassian integration. Connects Jira and Confluence through the official Atlassian remote MCP server (browser OAuth — no API tokens) so `/ba` and `/orchestrator` can fetch tickets and pages directly. Install only if you use Atlassian. |
 
 ### How they fit together
@@ -21,13 +23,13 @@ Business objective / Jira ticket / Confluence page
   /ba (tw-ba) ──────────► docs/ba/<feature>/   FRD, stories, api-spec,
         │                                      compliance requirements, RTM
         ▼
-  /orchestrator (tw-dev) ► requirements → design → coding → qa → compliance
-        │                  docs/HLD.md, docs/LLD.md, ADRs, code + tests,
-        ▼                  docs/TEST_PLAN-<feature>.md (+.csv), control report
-  Ready to ship
+  /orchestrator (tw-dev) ► requirements → design → coding → qa* → compliance
+        │                  docs/HLD.md, docs/LLD.md, ADRs, code + all unit/integration tests,
+        ▼                  docs/test/TEST_PLAN-*.md (+.csv), control report
+  Ready to ship            (* qa phase provided by the tw-qa plugin)
 ```
 
-Each plugin also works standalone — you can run `/qa` on any existing codebase, or `/ba` without ever installing tw-dev. tw-atlassian is optional for both: skills detect its MCP tools when present and fall back to pasted text when absent.
+Each plugin also works standalone — you can run `/qa` (tw-qa) on any existing codebase, or `/ba` without ever installing tw-dev. tw-atlassian is optional for all of them: skills detect its MCP tools when present and fall back to pasted text when absent. If tw-qa is not installed, the orchestrator skips the QA phase and tells you how to add it.
 
 ## Prerequisites
 
@@ -51,13 +53,17 @@ copilot plugin marketplace add anilchirumamilla009/techwave-toolkit
 
 ```bash
 # Claude Code
+claude plugin install tw-hooks@techwave       # shared guardrails — recommended for every install
 claude plugin install tw-ba@techwave
 claude plugin install tw-dev@techwave
+claude plugin install tw-qa@techwave
 claude plugin install tw-atlassian@techwave   # only if you use Jira/Confluence
 
 # Copilot CLI
+copilot plugin install tw-hooks@techwave      # shared guardrails — recommended for every install
 copilot plugin install tw-ba@techwave
 copilot plugin install tw-dev@techwave
+copilot plugin install tw-qa@techwave
 copilot plugin install tw-atlassian@techwave  # only if you use Jira/Confluence
 ```
 
@@ -89,8 +95,10 @@ Plugin updates are compared against your **local marketplace clone**, so always 
 
 ```bash
 claude plugin marketplace update techwave     # refresh the marketplace clone first
+claude plugin update tw-hooks@techwave
 claude plugin update tw-ba@techwave
 claude plugin update tw-dev@techwave
+claude plugin update tw-qa@techwave
 claude plugin update tw-atlassian@techwave
 ```
 
@@ -100,7 +108,7 @@ claude plugin update tw-atlassian@techwave
 copilot plugin uninstall tw-dev
 copilot plugin marketplace update techwave
 copilot plugin install tw-dev@techwave
-# repeat for tw-ba / tw-atlassian
+# repeat for tw-hooks / tw-ba / tw-qa / tw-atlassian
 ```
 
 Restart the CLI after updating.
@@ -109,8 +117,10 @@ Restart the CLI after updating.
 
 ```bash
 # Claude Code                          # Copilot CLI
+claude plugin uninstall tw-hooks       # copilot plugin uninstall tw-hooks
 claude plugin uninstall tw-ba          # copilot plugin uninstall tw-ba
 claude plugin uninstall tw-dev         # copilot plugin uninstall tw-dev
+claude plugin uninstall tw-qa          # copilot plugin uninstall tw-qa
 claude plugin uninstall tw-atlassian   # copilot plugin uninstall tw-atlassian
 claude plugin marketplace remove techwave   # copilot plugin marketplace remove techwave
 ```
@@ -141,7 +151,7 @@ With tw-atlassian installed, the orchestrator fetches the Jira ticket (or a Conf
 /requirements write stories for CSV export
 /design create the HLD for the notification service
 /coding implement the export endpoint
-/qa test plan for the changes on this branch
+/qa manual test plan for the changes on this branch   # tw-qa plugin
 /compliance health
 ```
 
@@ -151,8 +161,8 @@ With tw-atlassian installed, the orchestrator fetches the Jira ticket (or a Conf
 |---|---|---|
 | BA package (discovery, domain, process, UX, data, compliance, FRD, RTM + RTM.csv) | `docs/ba/<feature>/` | tw-ba `/ba` |
 | High/low-level design, ADRs (version-logged, history snapshots) | `docs/HLD.md`, `docs/LLD.md`, `docs/ADR-NNN-*.md`, `docs/design-history/` | tw-dev `/design` |
-| Manual test plan (+ importable CSV) | `docs/TEST_PLAN-<feature>.md` / `.csv` | tw-dev `/qa` |
-| Code, unit/E2E tests | project source tree (edited in place — never duplicate files) | tw-dev `/coding`, `/qa` |
+| Manual test plan — instructions + test data creation steps (+ importable CSV) | `docs/test/TEST_PLAN-<feature>.md` / `.csv` | tw-qa `/qa` |
+| Code + all unit/integration tests | project source tree (edited in place — never duplicate files) | tw-dev `/coding` |
 
 ## Project configuration (optional but recommended)
 
@@ -187,6 +197,8 @@ techwave-toolkit/
 ├── plugins/
 │   ├── tw-ba/                           # business-analysis plugin  → plugins/tw-ba/README.md
 │   ├── tw-dev/                          # development plugin        → plugins/tw-dev/README.md
+│   ├── tw-qa/                           # manual QA planning plugin → plugins/tw-qa/README.md
+│   ├── tw-hooks/                        # shared guardrail hooks    → plugins/tw-hooks/README.md
 │   └── tw-atlassian/                    # Atlassian MCP plugin      → plugins/tw-atlassian/README.md
 └── README.md
 ```

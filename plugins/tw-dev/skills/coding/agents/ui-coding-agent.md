@@ -106,13 +106,15 @@ After confirmation, **delegate all file writing to a subagent** (Agent/Task tool
 - The confirmed directory tree from Step 3 (with NEW/MODIFY tags)
 - The screen map from Step 2 (image references with their component mappings)
 - The relevant Stack Config Frontend section
-- This instruction, verbatim: **"Files tagged MODIFY are edited in place with the Edit tool — Read the file, change the existing component/function/block, and never append a duplicate of it, never create a parallel file (`*_new`, `*-v2`, `ComponentCopy`), and never emit the change as a separate code block or file. Match the file's existing style and imports."**
+- This instruction, verbatim: **"Files tagged MODIFY are edited in place with the Edit tool — Read the file, change the existing component/function/block, and never append a duplicate of it, never create a parallel file (`*_new`, `*-v2`, `ComponentCopy`), and never emit the change as a separate code block or file. Match the file's existing style and imports. No file over ~300 lines — split components/pages by responsibility. Every magic value (route paths, limits, labels reused across components, storage keys) goes in `src/constants.ts` — never inlined in two places, never in per-feature constant files."**
 
 The subagent writes all files. Only its summary (files written/modified, notable decisions, open issues) returns to the main conversation — **never echo file bodies back**.
 
 **If running in a context without subagent support (Copilot CLI), write files inline** but still do not echo their contents into chat — report the tree and decisions only.
 
 ### Files the subagent must generate:
+
+**`src/constants.ts`** — the single global constants module: route paths, storage keys, limits, shared labels. No magic values scattered in components.
 
 **`src/api/types.ts`** — TypeScript interfaces derived from the schema list. One interface per schema. No duplication.
 

@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026-08-05 — plugin split: tw-qa + tw-hooks extracted (tw-dev 0.10.0, tw-qa 0.1.0, tw-hooks 0.1.0)
+
+### Added
+- **New `tw-qa` plugin (0.1.0)** — the `/qa` skill moved out of tw-dev into `plugins/tw-qa/`, installable independently: `claude plugin install tw-qa@techwave`. Ships its own copy of the shared knowledge-graph protocol so it has no dependency on tw-dev.
+- **`/qa` is manual-QA-planning only (skill 0.13.0)** — its sole job is drafting the manual testing plan for what the coding agent changed: `docs/test/TEST_PLAN-<feature>.md` (+ importable CSV) with full step-by-step instructions, a dedicated **Test Data Creation** section (numbered TD-* steps with concrete values, observable confirmations, and cleanup), boundary/negative/authorization case derivation, manual accessibility checks when a UI changed, regression checklist, and sign-off. It detects the change set from the coding summary or git evidence and scopes the plan to it.
+- **All automated testing is `/coding`'s job (tw-dev)** — its test agents must cover **all unit and integration test cases** for the change (new key rule in the coding skill). `/qa` writes no test code of any kind — stub/E2E generation removed entirely along with the `test-creation-doc.md`, `frameworks.md`, and `test-types.md` references — and reports automated-coverage gaps back to `/coding`.
+- **New `tw-hooks` plugin (0.1.0)** — with the toolkit split across plugins, the guardrail hooks moved out of tw-dev into a shared plugin every install should include (`claude plugin install tw-hooks@techwave`). Carries the existing `PostToolUse` compliance scan (hardcoded credentials, PII in logs, AWS keys — warnings rebranded `[tw-hooks]`) **plus a new `PreToolUse` sensitive-data guard** that blocks Read/Bash/PowerShell calls which would expose secret material: reading `.env` (templates like `.env.example` stay allowed), `*.pem`/`*.key`/`id_rsa*`, keystores, `credentials.json`/`service-account*.json`, `~/.aws/credentials`, `.netrc`, `*.tfstate`, `secrets.*`, `.npmrc`/`.pypirc`/`.docker/config.json` — and shell commands that `cat`/`base64`/`curl`/`scp`/`Get-Content` those files. Blocked calls feed guidance back to the model (use variable names via the template, never values). tw-dev no longer ships hooks.
+
+### Changed (tw-dev 0.10.0) — client review feedback on generated code quality
+- **Coding Standards section added to the coding skill, enforced by the Validator** (new `Standards` verdict line + Check 3.5): no source file over ~300 lines (hard fail at 400 — addresses the 3200-line-file complaint), decomposition planned in the confirmed tree; one **global constants module** per component (`src/constants.ts` / `app/constants.py` / project convention) — no scattered per-feature constant files, no inline or duplicated magic values. Standards travel verbatim into subagent delegation and are baked into the coding, backend-coding, and UI-coding agents' plans and rules.
+- **Unit-test correctness checklist added to the test agents** (unit, backend, UI): one behavior per test, arrange–act–assert, assertions on observable behavior only, no tautological or assertion-free tests, mock only external boundaries, deterministic and order-independent, and per public function a happy + boundary + specific error path.
+- **Fixed a Validator bug that permitted TODO-stub tests**: Check 3 read "No empty test bodies (only `// TODO: implement` stubs are acceptable)" — it now fails empty bodies, TODO stubs, assertion-free and tautological tests, mocked-unit-under-test, and non-deterministic tests.
+- `skills/qa` removed from tw-dev; the orchestrator's Phase 4 now invokes `/qa` from tw-qa when installed, and proposes the sequence without QA (with an install hint) when it isn't.
+- `skills/test-plan` back-compat shim now points to the tw-qa plugin instead of a relative path inside tw-dev.
+- README, copilot-instructions, and marketplace descriptions updated accordingly.
+
 ## 0.8.0 — 2026-07-15
 
 ### Added

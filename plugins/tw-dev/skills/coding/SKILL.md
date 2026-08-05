@@ -163,8 +163,18 @@ Multi-agent flows burn tokens fast; these rules keep the cost proportional to th
 - **Lazy-load everything.** Load exactly one agent file — the current phase's — and unload the mental model of finished phases. Never preload later agents. Load at most one stack reference per component (the matching file, or `generic.md`) — never several speculatively.
 - **Never echo written files into chat.** After writing, report the directory tree, file count, and notable decisions — not file bodies. The user can open the files; repeating them doubles the cost of every generated line.
 - **Confirmation gates show plans, not products.** Trees + one-line key-file purposes for structure; a condensed operation table for large contracts (see contract agent). Full content only when the user asks.
-- **Delegate bulk generation to a subagent (Claude Code only).** After the user confirms a component's structure, the mechanical file-writing may run in a subagent (Agent/Task tool) carrying only: the confirmed tree, the contract, the component's Stack Config section, and the relevant KG extract. Only its summary (files written, decisions, open issues) returns to the main conversation — the generation churn never lands in the main context. Run inline instead when the flow needs mid-generation user input or the CLI has no subagent support (Copilot).
+- **Delegate bulk generation to a subagent (Claude Code only).** After the user confirms a component's structure, the mechanical file-writing may run in a subagent (Agent/Task tool) carrying only: the confirmed tree, the contract, the component's Stack Config section, the relevant KG extract, and the Coding Standards block verbatim. Only its summary (files written, decisions, open issues) returns to the main conversation — the generation churn never lands in the main context. Run inline instead when the flow needs mid-generation user input or the CLI has no subagent support (Copilot).
 - **Pass extracts, not raw artifacts.** Agents receive the KG *extract* and the contract's operation list — not the full `GRAPH_REPORT.md` or re-pasted specs the conversation already contains.
+
+---
+
+## Coding Standards (enforced on every generated file)
+
+These apply in all modes, travel **verbatim** with any subagent delegation, and are checked by the Validator:
+
+- **File size.** No source file over **300 lines** (target); the Validator fails anything over **400**. One responsibility per file. Decomposition happens **in the planned tree** — split routes/services/components by domain before writing, never emit a monolith and refactor later. When modifying an existing file already near the cap, extract instead of growing it.
+- **Global constants module.** Each component has exactly one constants home — `src/constants.ts` / `app/constants.py` / `internal/constants/` / the ecosystem's idiom (a `constants/` directory with domain-grouped files once it outgrows one file). Every magic number, status string, limit, key name, and shared literal lives there. Never scatter per-feature constant files, never inline a magic value used more than once, never duplicate the same literal in two files. When the project already has a constants convention, follow it.
+- **Unit tests are correct, not just present.** Test agents follow the correctness checklist in their agent files: one behavior per test, arrange–act–assert, assertions on observable behavior (never tautological, never assertion-free), mocks only at external boundaries, deterministic and order-independent. The Validator fails tests that violate it.
 
 ---
 
@@ -172,6 +182,7 @@ Multi-agent flows burn tokens fast; these rules keep the cost proportional to th
 
 - **Edit in place.** When a target file already exists, modify it with the Edit tool. Never create a parallel copy (`*_new`, `*-v2`, `*.updated`, a second component with a suffix), never append a duplicate of an existing function/component/block next to the original, and never scaffold a fresh tree when the project already has one — extend the existing structure and follow its conventions. New files are for genuinely new modules only. This rule travels with any subagent delegation.
 - **Tests are real.** Test agents write complete, runnable test bodies — arrange, act, assert — never `// TODO: implement` stubs. Before handoff, run the declared test runner and fix failures caused by the tests themselves (a failure that exposes a real code bug goes to the Validator, not silently skipped).
+- **All automated testing lives here.** The test agents must cover **all unit and integration test cases** for the change — every public function/method (happy path, boundaries, error paths) and every route/module interaction the change touches. No layer is deferred to another skill: the tw-qa plugin only drafts the manual testing plan document; it writes no test code and will hand automated-coverage gaps back to this skill.
 - No agent writes any file until it receives explicit user confirmation for its own component
 - Each agent announces its start and handoff — the user can follow the flow
 - Contract Agent confirmation is separate from coding agent confirmations — it is its own gate in fullstack and multi-component modes

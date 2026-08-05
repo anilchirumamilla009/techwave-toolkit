@@ -1,7 +1,7 @@
 {
   "name": "tw-dev",
-  "version": "0.9.5",
-  "description": "Dev-phase SDLC skills for any kind of development: orchestrate, requirements, design, coding (web, API, CLI, library, mobile, data/ML — single or multi-component with interface contracts), QA strategy (E2E/acceptance/performance), and compliance — stack and project-type agnostic",
+  "version": "0.10.0",
+  "description": "Dev-phase SDLC skills for any kind of development: orchestrate, requirements, design, coding (web, API, CLI, library, mobile, data/ML — single or multi-component with interface contracts; its test agents write ALL automated tests — full unit and integration coverage), and compliance — stack and project-type agnostic. Manual test planning lives in the tw-qa plugin.",
   "author": {
     "name": "Venkata Anil Kumar Chirumamilla",
     "email": "anil.chirumamilla@techwave.com"
@@ -15,7 +15,6 @@
     "./skills/requirements",
     "./skills/design",
     "./skills/coding",
-    "./skills/qa",
     "./skills/compliance"
   ]
 }

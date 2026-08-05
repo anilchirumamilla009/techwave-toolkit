@@ -50,6 +50,7 @@ backend/
       <Entity>.ts             # data models from openapi schemas
     services/
       <resource>.service.ts   # business logic, separated from routing
+    constants.ts              # single global constants module — every magic value lives here
   .env.example               # DB_URL, JWT_SECRET, PORT, etc.
   package.json
   tsconfig.json              # or equivalent for the declared stack
@@ -88,6 +89,7 @@ Rules:
 - Error responses match spec-declared error codes (401, 403, 404, etc.)
 - No hardcoded secrets — read from environment variables; document in `.env.example`
 - Business logic lives in a service layer, not in route handlers
+- **Coding standards from SKILL.md**: no file over ~300 lines — split routes/controllers/services by resource in the plan, never one monolithic handler file; all magic values (limits, status strings, key names, defaults) go in the single `constants.ts` (or the project's existing constants convention), never inlined or duplicated across files
 
 ---
 

@@ -1,0 +1,14 @@
+{
+  "name": "tw-qa",
+  "version": "0.1.0",
+  "description": "Manual QA planning skill: /qa drafts the manual testing plan for a change set — typically what the tw-dev coding agent just built — into docs/test/TEST_PLAN-*.md (+ importable CSV): full step-by-step instructions, concrete test data creation steps with cleanup, boundary/negative/authorization cases, regression checklist, sign-off. Documents only — all automated tests (unit + integration) are written by tw-dev /coding. Standalone or as Phase 4 of the tw-dev orchestrator.",
+  "author": {
+    "name": "Venkata Anil Kumar Chirumamilla",
+    "email": "anil.chirumamilla@techwave.com"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/anilchirumamilla009/techwave-toolkit",
+  "keywords": ["qa", "manual-testing", "test-plan", "testing-instructions", "test-data", "acceptance-checks", "regression-checklist", "sdlc"],
+  "repository": "https://github.com/anilchirumamilla009/techwave-toolkit",
+  "skills": ["./skills/qa"]
+}

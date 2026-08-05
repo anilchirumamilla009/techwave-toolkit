@@ -1,0 +1,13 @@
+{
+  "name": "tw-hooks",
+  "version": "0.1.0",
+  "description": "Shared guardrail hooks for all TechWave plugins — install alongside tw-ba/tw-dev/tw-qa. PreToolUse sensitive-data guard blocks reading or exfiltrating secret files (.env, private keys, cloud credentials, tfstate) so secrets never enter the conversation; PostToolUse compliance scan warns on hardcoded credentials, PII in log statements, and cloud access keys in written files.",
+  "author": {
+    "name": "Venkata Anil Kumar Chirumamilla",
+    "email": "anil.chirumamilla@techwave.com"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/anilchirumamilla009/techwave-toolkit",
+  "keywords": ["hooks", "guardrails", "security", "compliance", "secrets", "pii", "sensitive-data", "sdlc"],
+  "repository": "https://github.com/anilchirumamilla009/techwave-toolkit"
+}

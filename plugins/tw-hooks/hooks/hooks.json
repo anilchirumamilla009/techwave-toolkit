@@ -1,0 +1,29 @@
+{
+  "description": "techwave-toolkit shared guardrails — blocks reads/exfiltration of secret files (PreToolUse) and warns on credential/PII patterns in written files (PostToolUse)",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Read|Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/sensitive-data-guard.sh\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/compliance-scan.sh\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

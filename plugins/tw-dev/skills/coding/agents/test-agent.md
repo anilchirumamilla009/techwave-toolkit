@@ -38,6 +38,17 @@ If Stack Config is absent, derive from the stack name the user provided in Step 
 - If a test file for the module already exists, **add the new tests into it with the Edit tool** — do not create a second test file for the same module or duplicate existing test cases
 - Distinguish real dependencies (DB, HTTP) from mocks explicitly in each test
 
+**Correctness checklist — every test must satisfy all of these (the Validator fails violations):**
+
+1. **One behavior per test** — a test verifying two behaviors is split into two
+2. **Arrange–act–assert** structure, visible in the body
+3. **Assert observable behavior** — return values, thrown errors, emitted responses, state the caller can see. Never assert implementation internals (call counts on private helpers, internal field layout) unless the interaction IS the contract
+4. **No tautologies** — never `expect(true).toBe(true)`, never asserting a mock returns what it was just stubbed with; every assertion can fail if the code is wrong
+5. **Mock only external boundaries** — DB, network, filesystem, clock. Never mock the unit under test or the pure logic being verified
+6. **Deterministic** — seed randomness, inject/freeze time, no real network, no sleeps
+7. **Isolated** — fresh fixtures per test, no shared mutable state, passes in any order
+8. **Per public function, minimum**: one happy path, one boundary (empty/zero/max), one error path with the specific expected error — matching the risk-tier coverage targets below
+
 Coverage targets by risk:
 
 | Risk level | Unit | Integration |

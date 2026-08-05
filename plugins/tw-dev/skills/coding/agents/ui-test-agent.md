@@ -23,6 +23,7 @@ Read all files written by the UI Coding Agent:
 **Rules for all tests written by this agent:**
 - Every test body is complete and runnable — arrange, act, assert against the real component/function. No `// TODO: implement` stubs, no placeholder assertions.
 - If a test file for the component/module already exists, add new tests into it with the Edit tool — never create a duplicate test file or repeat existing cases.
+- The **correctness checklist in `agents/test-agent.md` Step 3 applies in full**: one behavior per test, assertions on what the user sees (rendered text, ARIA roles, navigation) — never on internal component state or class names; no tautological or assertion-free tests; mock only the API boundary, never the component under test; deterministic and order-independent.
 
 ---
 

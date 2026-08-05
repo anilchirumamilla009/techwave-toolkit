@@ -193,15 +193,17 @@ Based on what exists, propose only the phases that are missing:
 ```
 Phase 1: /requirements  — user stories + acceptance criteria
 Phase 2: /design        — HLD, LLD, ADR saved to docs/
-Phase 3: /coding        — code, tests, validation (3-agent flow)
-Phase 4: /qa     — test strategy + stubs
+Phase 3: /coding        — code + ALL automated tests (unit & integration), validation (3-agent flow)
+Phase 4: /qa            — manual test plan drafted into docs/test/ (tw-qa plugin)
 Phase 5: /compliance    — domain compliance check
 ```
+
+**Phase 4 lives in the separate `tw-qa` plugin.** If the `qa` skill is not available in this session, propose the sequence without it and tell the user: "QA phase skipped — install the tw-qa plugin (`claude plugin install tw-qa@techwave`) to enable it."
 
 **Partial sequences (examples):**
 ```
 New feature:           /requirements → /design → /coding → /qa → /compliance
-Code exists, no tests: /qa → /compliance
+Code exists, no tests: /coding (write the missing unit + integration tests) → /qa → /compliance
 Bug ticket:            /requirements (bug story) → /coding → /qa
 ```
 
@@ -239,8 +241,8 @@ Requirement: <one-line title>
 Completed phases:
   ✓ Requirements — X user stories, Y acceptance criteria
   ✓ Design — HLD + LLD saved to docs/, 1 ADR
-  ✓ Coding — code written, tests generated, validation passed
-  ✓ QA — manual test plan (docs/TEST_PLAN-*.md) + E2E stubs + coverage targets
+  ✓ Coding — code written, all unit + integration tests generated, validation passed
+  ✓ QA — manual test plan drafted (docs/test/TEST_PLAN-*.md + .csv)
   ✓ Compliance — HIPAA: 3 controls applied
 
 Skipped: [list any skipped phases]

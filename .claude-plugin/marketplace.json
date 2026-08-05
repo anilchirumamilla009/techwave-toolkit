@@ -9,9 +9,16 @@
     {
       "name": "tw-dev",
       "source": "./plugins/tw-dev",
-      "description": "Dev-phase SDLC skills for any kind of development: orchestrate, requirements, design, coding (web, API, CLI, library, mobile, data/ML — single or multi-component with interface contracts), QA strategy (E2E/acceptance/performance), and compliance — stack and project-type agnostic",
-      "version": "0.9.5",
+      "description": "Dev-phase SDLC skills for any kind of development: orchestrate, requirements, design, coding (web, API, CLI, library, mobile, data/ML — single or multi-component with interface contracts; its test agents write ALL automated tests — full unit and integration coverage), and compliance — stack and project-type agnostic. Manual test planning lives in the tw-qa plugin.",
+      "version": "0.10.0",
       "category": "development"
+    },
+    {
+      "name": "tw-qa",
+      "source": "./plugins/tw-qa",
+      "description": "Manual QA planning — /qa drafts the manual testing plan for a change set (typically what the tw-dev coding agent just built) into docs/test/TEST_PLAN-*.md (+ importable CSV): full step-by-step instructions, concrete test data creation steps with cleanup, boundary/negative/authorization cases, regression checklist, sign-off. Documents only — all automated tests (unit + integration) are written by tw-dev /coding. Standalone or as Phase 4 of the tw-dev orchestrator.",
+      "version": "0.1.0",
+      "category": "testing"
     },
     {
       "name": "tw-ba",
@@ -19,6 +26,13 @@
       "description": "Domain-agnostic business analysis — /ba drives discovery → domain & process analysis → UX & data modeling → compliance requirements → functional spec (FRD + RTM) into docs/ba/, knowledge-graph context first. Industry specifics via optional domain references; hands off to tw-dev.",
       "version": "0.1.1",
       "category": "analysis"
+    },
+    {
+      "name": "tw-hooks",
+      "source": "./plugins/tw-hooks",
+      "description": "Shared guardrail hooks for all TechWave plugins — install alongside tw-ba/tw-dev/tw-qa. PreToolUse sensitive-data guard blocks reading or exfiltrating secret files (.env, private keys, cloud credentials, tfstate); PostToolUse compliance scan warns on hardcoded credentials, PII in logs, and cloud access keys in written files. Moved out of tw-dev so every plugin shares one guardrail set.",
+      "version": "0.1.0",
+      "category": "security"
     },
     {
       "name": "tw-atlassian",
