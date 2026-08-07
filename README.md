@@ -9,7 +9,7 @@ All commands below are shown for both CLIs — use the one you work in. Skills b
 | Plugin | Version | What it does |
 |---|---|---|
 | **tw-ba** | 0.1.0 | Business analysis. `/ba` turns a business objective into development-ready BA deliverables in `docs/ba/<feature>/` — stakeholder analysis, domain & process models, UX wireframes, data dictionary & API spec, compliance requirements, and a functional spec (FRD + traceability matrix). Domain-agnostic; industry specifics (e.g. healthcare/FHIR) load from optional domain references. |
-| **tw-dev** | 0.10.0 | Development phases. `/orchestrator` drives the full dev flow from a ticket or requirement; individual skills: `/requirements` (user stories, acceptance criteria, BDD), `/design` (HLD/LLD/ADRs with version history), `/coding` (multi-agent code + unit tests + validation for any project type), `/compliance` (code-level HIPAA/PCI/GDPR/SOC 2 review). Stack- and project-type agnostic. |
+| **tw-dev** | 0.10.0 | Development phases. `/orchestrator` drives the dev flow taking the tw-ba package (`docs/ba/<feature>/`) — or a ticket/pasted text — as its requirements **input**; individual skills: `/design` (HLD/LLD/ADRs with version history), `/coding` (multi-agent code + ALL unit/integration tests + validation for any project type), `/compliance` (code-level HIPAA/PCI/GDPR/SOC 2 review). Stack- and project-type agnostic. |
 | **tw-qa** | 0.1.0 | Manual QA planning. `/qa` drafts the manual testing plan for a change set — typically what `/coding` just built — into `docs/test/TEST_PLAN-*.md` (+ importable CSV): full step-by-step instructions, concrete test data creation steps with cleanup, boundary/negative/authorization cases, regression checklist, sign-off. Documents only — all automated tests (unit + integration) are written by tw-dev `/coding`'s test agents. Standalone or as Phase 4 of the tw-dev orchestrator. |
 | **tw-hooks** | 0.1.0 | Shared guardrails for all TechWave plugins (moved out of tw-dev). PreToolUse sensitive-data guard **blocks** reading or exfiltrating secret files (`.env`, private keys, cloud credentials, tfstate) so secrets never enter the conversation; PostToolUse compliance scan warns on hardcoded credentials, PII in log statements, and cloud access keys in written files. No skills — install alongside any other plugin. |
 | **tw-atlassian** | 1.0.0 | Atlassian integration. Connects Jira and Confluence through the official Atlassian remote MCP server (browser OAuth — no API tokens) so `/ba` and `/orchestrator` can fetch tickets and pages directly. Install only if you use Atlassian. |
@@ -23,7 +23,7 @@ Business objective / Jira ticket / Confluence page
   /ba (tw-ba) ──────────► docs/ba/<feature>/   FRD, stories, api-spec,
         │                                      compliance requirements, RTM
         ▼
-  /orchestrator (tw-dev) ► requirements → design → coding → qa* → compliance
+  /orchestrator (tw-dev) ► [BA package as input] → design → coding → qa* → compliance
         │                  docs/HLD.md, docs/LLD.md, ADRs, code + all unit/integration tests,
         ▼                  docs/test/TEST_PLAN-*.md (+.csv), control report
   Ready to ship            (* qa phase provided by the tw-qa plugin)
@@ -148,7 +148,7 @@ With tw-atlassian installed, the orchestrator fetches the Jira ticket (or a Conf
 ### Run any skill standalone
 
 ```
-/requirements write stories for CSV export
+/ba write the requirements for CSV export       # tw-ba plugin — output feeds tw-dev
 /design create the HLD for the notification service
 /coding implement the export endpoint
 /qa manual test plan for the changes on this branch   # tw-qa plugin

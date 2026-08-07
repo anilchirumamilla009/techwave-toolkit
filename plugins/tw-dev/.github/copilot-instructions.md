@@ -8,8 +8,7 @@ Invoke any skill with `/skill-name`:
 
 | Skill | Invoke | What it does |
 |---|---|---|
-| Orchestrator | `/orchestrator` | Entry point — drives the full dev workflow from a ticket, GitHub issue, or plain text |
-| Requirements | `/requirements` | Writes user stories, acceptance criteria, BDD scenarios |
+| Orchestrator | `/orchestrator` | Entry point — drives the dev workflow from a BA package (`docs/ba/`), ticket, GitHub issue, or plain text |
 | Design | `/design` | Creates HLD and LLD saved to `docs/`, ADRs, tech-stack evaluations |
 | Coding | `/coding [stack]` | Any project type — single-component flow, fullstack web (UI + Backend agents), or multi-component with an interface contract |
 | Compliance | `/compliance [domain]` | HIPAA, PCI DSS, GDPR, SOC 2 code-level review |
@@ -29,7 +28,7 @@ This means skills understand your existing codebase — modules, stack, patterns
 
 ```
 /orchestrator PROJ-123         — full workflow from a Jira ticket
-/requirements login feature    — write stories only
+/ba login feature              — draft requirements first (tw-ba plugin → docs/ba/)
 /design create HLD for auth    — design only
 /coding                        — generate code + unit/integration tests + validation
 /qa login feature              — manual test plan into docs/test/ (tw-qa plugin)

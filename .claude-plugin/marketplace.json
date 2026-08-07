@@ -9,7 +9,7 @@
     {
       "name": "tw-dev",
       "source": "./plugins/tw-dev",
-      "description": "Dev-phase SDLC skills for any kind of development: orchestrate, requirements, design, coding (web, API, CLI, library, mobile, data/ML — single or multi-component with interface contracts; its test agents write ALL automated tests — full unit and integration coverage), and compliance — stack and project-type agnostic. Manual test planning lives in the tw-qa plugin.",
+      "description": "Dev-phase SDLC skills for any kind of development: orchestrate, design, coding (web, API, CLI, library, mobile, data/ML — single or multi-component with interface contracts; its test agents write ALL automated tests — full unit and integration coverage), and compliance — stack and project-type agnostic. Requirements come in as input from the tw-ba plugin (docs/ba/); manual test planning lives in the tw-qa plugin.",
       "version": "0.10.0",
       "category": "development"
     },

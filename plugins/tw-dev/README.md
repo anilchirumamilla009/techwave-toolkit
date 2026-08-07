@@ -1,6 +1,6 @@
 # tw-dev — Full Reference
 
-SDLC skills plugin for GitHub Copilot CLI. Drives the full development lifecycle — requirements, architecture, code generation, and compliance — from a single Copilot session. QA strategy lives in the separate [tw-qa plugin](../tw-qa/README.md); the orchestrator invokes its `/qa` skill when installed.
+SDLC skills plugin for GitHub Copilot CLI. Drives the development lifecycle — architecture, code generation, and compliance — from a single session. Requirements come in as **input** from the [tw-ba plugin](../tw-ba/README.md) (`/ba` → `docs/ba/<feature>/`); manual test planning lives in the [tw-qa plugin](../tw-qa/README.md) — the orchestrator invokes `/qa` when installed.
 
 Works with **any project type** (web app, API, CLI, library, mobile, desktop, data pipeline, ML, infra) and **any stack** (Node.js, Python, Go, Java, Rust, .NET, React, Vue, Swift, Kotlin, Flutter, and beyond).
 
@@ -14,7 +14,7 @@ Works with **any project type** (web app, API, CLI, library, mobile, desktop, da
 
 - [Skills Reference](#skills-reference)
   - [Orchestrator](#orchestrator)
-  - [Requirements](#requirements)
+  - [Requirements — moved to tw-ba](#requirements--moved-to-tw-ba)
   - [Design](#design)
   - [Coding](#coding)
   - [QA Strategy — moved to tw-qa](#qa-strategy--moved-to-tw-qa)
@@ -33,7 +33,7 @@ Works with **any project type** (web app, API, CLI, library, mobile, desktop, da
 
 ### Orchestrator
 
-**Entry point for the full SDLC workflow.** Give it any form of requirement — Jira ticket ID, GitHub issue URL, Confluence page, or plain text — and it drives requirements → design → coding → QA → compliance in sequence, asking for your approval at each phase boundary. The QA phase requires the [tw-qa plugin](../tw-qa/README.md); without it, the orchestrator proposes the sequence without QA and tells you how to install it.
+**Entry point for the full SDLC workflow.** Give it a BA package (`docs/ba/<feature>/` from tw-ba's `/ba` — detected automatically), a Jira ticket ID, GitHub issue URL, Confluence page, or plain text, and it drives design → coding → QA → compliance in sequence, asking for your approval at each phase boundary. Requirements are the pipeline's *input*, never a phase — the orchestrator loads the BA artifacts as the authoritative requirements and recommends `/ba` when none exist. The QA phase requires the [tw-qa plugin](../tw-qa/README.md); without it, the orchestrator proposes the sequence without QA and tells you how to install it.
 
 #### How to invoke
 
@@ -74,9 +74,10 @@ Scans the project for existing source files, test files, and design docs. Skips 
 Shows only the missing phases. You type `go` to start or adjust.
 
 ```
-New feature:           /requirements → /design → /coding → /qa → /compliance
-Code exists, no tests: /coding (write the missing unit + integration tests) → /qa → /compliance
-Bug ticket:            /requirements (bug story) → /coding → /qa
+New feature (BA done):  /design → /coding → /qa → /compliance
+No BA package yet:      recommend /ba first (tw-ba), else proceed from ticket text
+Code exists, no tests:  /coding (write the missing unit + integration tests) → /qa → /compliance
+Bug ticket:             /coding → /qa   (ticket text is the requirement context)
 ```
 
 **Step 5 — Drive each phase.**
@@ -94,44 +95,16 @@ Prints a completion table listing every phase, what was produced, and next steps
 
 ---
 
-### Requirements
+### Requirements — moved to tw-ba
 
-Transforms raw ideas, features, or epics into structured, behavior-first requirements artefacts.
+Requirements drafting is a business-analysis activity and is owned by the **[tw-ba plugin](../tw-ba/README.md)**:
 
-#### How to invoke
-
-```
-/requirements write user stories for a user login feature
-/requirements break down the epic: "User Profile Management"
-/requirements define acceptance criteria for the checkout flow
-/requirements write BDD scenarios for password reset
-/requirements capture requirements for real-time notifications
+```bash
+claude plugin install tw-ba@techwave     # Claude Code
+copilot plugin install tw-ba@techwave    # Copilot CLI
 ```
 
-#### What it produces
-
-1. **Epic statement** (when applicable)
-2. **User stories** in As a / I want / So that format
-3. **Acceptance criteria** — testable Given/When/Then bullets for each story
-4. **BDD scenarios** (for features with complex branching)
-5. **Technical Notes** — constraints for the dev team, never implementation choices
-6. **Out of Scope** — explicit list of what this story does NOT cover
-
-#### Story sizing
-
-| Size | Effort |
-|---|---|
-| XS | Less than 1 day |
-| S | 1–2 days |
-| M | 3–5 days |
-| L | 1–2 weeks — flag for breakdown |
-
-#### Key rules
-
-- Stories describe observable outcomes, not database tables or API calls.
-- Acceptance criteria must be verifiable true/false by a QA engineer.
-- Implementation details go in Technical Notes only — never in the story body.
-- When input is incomplete, drafts with `[Assumed]` tags and asks one consolidating question.
+Run `/ba <business objective or ticket>` — it produces the FRD, user stories, acceptance criteria, and RTM into `docs/ba/<feature>/`. Those artifacts are the **input** to this plugin: `/orchestrator` detects the BA package automatically, loads it as the authoritative requirements, and proceeds straight to design → coding → QA → compliance. Without a BA package, the orchestrator works from the ticket/pasted text and recommends running `/ba` first for anything non-trivial.
 
 ---
 
@@ -501,11 +474,6 @@ plugins/tw-dev/
 │   │   ├── SKILL.md
 │   │   └── references/
 │   │       └── mcp-sources.md        # Known MCP tool signatures per source system
-│   ├── requirements/
-│   │   ├── SKILL.md
-│   │   └── references/
-│   │       ├── story-templates.md
-│   │       └── bdd-patterns.md
 │   ├── design/
 │   │   ├── SKILL.md
 │   │   └── references/

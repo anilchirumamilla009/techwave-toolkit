@@ -1,18 +1,17 @@
 {
   "name": "tw-dev",
   "version": "0.10.0",
-  "description": "Dev-phase SDLC skills for any kind of development: orchestrate, requirements, design, coding (web, API, CLI, library, mobile, data/ML — single or multi-component with interface contracts; its test agents write ALL automated tests — full unit and integration coverage), and compliance — stack and project-type agnostic. Manual test planning lives in the tw-qa plugin.",
+  "description": "Dev-phase SDLC skills for any kind of development: orchestrate, design, coding (web, API, CLI, library, mobile, data/ML — single or multi-component with interface contracts; its test agents write ALL automated tests — full unit and integration coverage), and compliance — stack and project-type agnostic. Requirements come in as input from the tw-ba plugin (docs/ba/); manual test planning lives in the tw-qa plugin.",
   "author": {
     "name": "Venkata Anil Kumar Chirumamilla",
     "email": "anil.chirumamilla@techwave.com"
   },
   "license": "MIT",
   "homepage": "https://github.com/anilchirumamilla009/techwave-toolkit",
-  "keywords": ["sdlc", "orchestrator", "requirements", "design", "coding", "testing", "compliance"],
+  "keywords": ["sdlc", "orchestrator", "design", "coding", "testing", "compliance"],
   "repository": "https://github.com/anilchirumamilla009/techwave-toolkit",
   "skills": [
     "./skills/orchestrator",
-    "./skills/requirements",
     "./skills/design",
     "./skills/coding",
     "./skills/compliance"
